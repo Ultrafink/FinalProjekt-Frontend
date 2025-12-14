@@ -1,0 +1,100 @@
+/* Фон всей страницы и центрирование формы */
+.signup-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+/* Форма */
+.signup-box {
+  width: 90%;
+  max-width: 350px;
+  padding: 40px;
+  text-align: center;
+  border: 1px solid #dbdbdb;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+
+/* Логотип Instagram сверху */
+.logo {
+  width: 175px;
+  margin: 0 auto 20px auto;
+  display: block;
+}
+
+/* Поля формы */
+form input {
+  width: 100%;
+  padding: 9px;
+  margin-bottom: 10px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  background: #fafafa;     /* светлый фон полей */
+  color: #262626;          /* тёмный цвет текста */
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Плейсхолдер */
+form input::placeholder {
+  color: #8e8e8e;          /* серый цвет текста-подсказки */
+}
+
+/* Кнопка */
+form button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  background-color: #0095f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+form button:hover {
+  opacity: 0.8; /* эффект при наведении */
+}
+
+/* Текст под формой */
+.switch-box {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #262626;
+}
+
+.switch-box a {
+  color: #0095f6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease; /* плавная анимация */
+}
+
+.switch-box a:hover {
+  opacity: 0.7; /* эффект при наведении */
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-bottom: 5px;
+  display: block;
+  text-align: left;
+}
+
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .signup-box {
+    width: 95%;
+    padding: 20px;
+  }
+}

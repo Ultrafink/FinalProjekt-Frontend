@@ -1,0 +1,163 @@
+/* --- Общий фон и центрирование --- */
+.login-page {
+  display: flex;
+  justify-content: center;  /* центр по горизонтали */
+  align-items: center;      /* центр по вертикали */
+  width: 100vw;
+  height: 100vh;
+  background: var(--light-grey);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- Контейнер двух колонок --- */
+.login-wrapper {
+  display: flex;
+  width: auto;          /* блок под содержимое */
+  align-items: center;
+  gap: 0;               /* убираем лишний gap между колонками */
+}
+
+.login-left {
+  display: flex;
+  justify-content: flex-end; /* картинка ближе к форме */
+  align-items: center;
+  flex: 1;
+}
+
+.login-left-img {
+  width: 150%;
+  height: auto;
+}
+
+.login-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding-left: 20px;   /* немного отступ от картинки */
+}
+
+/* --- Карточка логина --- */
+.login-card {
+  width: 100%;
+  max-width: 350px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  padding: 40px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.login-logo {
+  width: 175px;
+  margin-bottom: 30px;
+}
+
+/* --- Форма --- */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-input {
+  background: #fafafa;
+  border: 1px solid var(--border-color);
+  padding: 9px 0 7px 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  border-radius: 3px;
+}
+
+.login-button {
+  background: var(--blue);
+  color: white;
+  border: none;
+  padding: 8px 0;
+  border-radius: 5px;
+  margin-top: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- OR разделитель --- */
+.or-container {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.or-text {
+  margin: 0 10px;
+  color: #8e8e8e;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* --- Facebook login --- */
+.facebook-login {
+  color: #385185;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.forgot-link {
+  font-size: 12px;
+  color: #00376b;
+  text-align: center;
+  display: block;
+  margin-top: 10px;
+}
+
+/* --- Карточка Sign Up --- */
+.signup-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  text-align: center;
+  width: 100%;
+  max-width: 350px;
+}
+
+.signup-card p {
+  color: #262626;               /* чёрный цвет текста */
+  font-size: 14px;
+}
+
+.signup-link {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+/* --- Адаптив для мобильных --- */
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .login-left {
+    display: none;
+  }
+
+  .login-card,
+  .signup-card {
+    max-width: 100%;
+  }
+}

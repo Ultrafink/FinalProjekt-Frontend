@@ -1,0 +1,139 @@
+.trouble-page {
+  display: flex;
+  justify-content: center; /* горизонтальный центр */
+  align-items: center;     /* вертикальный центр */
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.trouble-box {
+  width: 90%;
+  max-width: 360px;   /* контейнер уже */
+  padding: 40px 20px 60px 20px;
+  text-align: center;
+  border: 1px solid #dbdbdb;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.lock-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px auto;
+  display: block;
+}
+
+.trouble-box h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.trouble-box p {
+  font-size: 14px;
+  color: #262626;
+  margin-bottom: 20px;
+}
+
+.trouble-input {
+  width: 100%;
+  padding: 9px;
+  margin-bottom: 12px;
+  border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.blue-btn {
+  width: 100%;
+  padding: 8px;
+  background-color: #0095f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.server-message {
+  color: #ed4956;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* OR разделитель */
+.or-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 10px 0 0 0;
+}
+
+.line {
+  flex: 1;
+  height: 1px;
+  background: #dbdbdb;
+}
+
+.or-text {
+  margin: 0 10px;
+  color: #8e8e8e;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Create New Account */
+.create-account {
+  margin: 10px 0 20px 0;
+}
+.create-account a {
+  color: #262626;  /* обычный цвет текста */
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Back to login button — белая, на всю ширину, только верхняя граница */
+.back-login-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  background-color: #fff;
+  border-top: 1px solid #dbdbdb;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: #262626;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .trouble-box {
+    width: 90%;
+    padding: 30px 15px 60px 15px;
+  }
+  .lock-icon {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 25px;
+  }
+  .trouble-input,
+  .blue-btn,
+  .or-container,
+  .create-account {
+    width: 100%;
+  }
+}
