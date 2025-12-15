@@ -1,8 +1,9 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://ichgram-backend-jomh.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL,
 });
+
 
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
