@@ -25,7 +25,7 @@ export default function LoginPage() {
       localStorage.setItem("token", res.data.token);
 
       // редирект на домашнюю страницу
-      navigate("/");
+      navigate("/home");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
