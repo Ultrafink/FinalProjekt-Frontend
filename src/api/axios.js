@@ -1,16 +1,16 @@
 import axios from "axios";
-import { getToken } from "./auth";
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "https://ichgram-backend-jomh.onrender.com",
 });
 
-// ---- Добавляем токен в каждый запрос ----
 instance.interceptors.request.use((config) => {
-  const token = getToken();
+  const token = localStorage.getItem("token");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
