@@ -4,11 +4,11 @@ import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import TroubleLoggingInPage from "../pages/auth/TroubleLoggingInPage";
 
-
 import HomePage from "../pages/HomePage";
-import MainLayout from "../layouts/MainLayout";
-
 import ProfileEditPage from "../pages/ProfileEditPage";
+import ProfilePage from "../pages/ProfilePage";
+
+import MainLayout from "../layouts/MainLayout";
 
 export default function AppRouter() {
   return (
@@ -22,10 +22,18 @@ export default function AppRouter() {
         element={<TroubleLoggingInPage />}
       />
 
-      {/* 🧱 ОСНОВНОЕ ПРИЛОЖЕНИЕ — С сайдбаром */}
+      {/* 🧱 ПРИЛОЖЕНИЕ — С сайдбаром */}
       <Route element={<MainLayout />}>
         <Route path="/home" element={<HomePage />} />
-        <Route path="/profile" element={<ProfileEditPage />} />
+
+        {/* 👤 мой профиль */}
+        <Route path="/profile" element={<ProfilePage />} />
+
+        {/* ✏️ редактирование профиля */}
+        <Route path="/profile/edit" element={<ProfileEditPage />} />
+
+        {/* 👥 профиль другого пользователя */}
+        <Route path="/profile/:username" element={<ProfilePage />} />
       </Route>
     </Routes>
   );
