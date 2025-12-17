@@ -1,83 +1,80 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/axios";
-import "../styles/home.css";
+import Footer from "../components/Footer";
 
 export default function HomePage() {
   const [posts, setPosts] = useState([]);
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Функция загрузки постов
-  const fetchPosts = async () => {
+  // Загружаем только посты текущего пользователя
+  const fetchMyPosts = async () => {
     try {
-      const res = await axios.get("/posts");
+      const res = await axios.get("/posts/me");
       setPosts(res.data);
     } catch (err) {
-      console.error("Fetch posts error:", err);
+      console.error("Fetch my posts error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Загружаем посты при загрузке страницы — корректная форма
   useEffect(() => {
-    const load = async () => {
-      await fetchPosts();
-    };
-    load();
+    fetchMyPosts();
   }, []);
 
-  // Создание поста
-  const createPost = async (e) => {
-    e.preventDefault();
-
-    if (!content.trim()) return;
-
-    setLoading(true);
-
-    try {
-      await axios.post("/posts", { content });
-      setContent("");
-      await fetchPosts(); // обновляем ленту
-    } catch (err) {
-      console.error("Create post error:", err);
-    }
-
-    setLoading(false);
-  };
+  if (loading) {
+    return <div className="home-loading">Loading...</div>;
+  }
 
   return (
-    <div className="home-container">
-      <div className="create-post">
-        <form onSubmit={createPost}>
-          <textarea
-            placeholder="Что нового?"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Публикация..." : "Опубликовать"}
-          </button>
-        </form>
-      </div>
-
+    <main className="home">
       <div className="feed">
+        {posts.length === 0 && (
+          <div className="empty-feed">
+            <img
+              src="/icons/noposts.png"
+              alt="No updates"
+              className="empty-feed-img"
+            />
+            <h2>You've seen all the updates</h2>
+            <p className="empty-feed-subtext">
+              You have viewed all new publications
+            </p>
+          </div>
+        )}
+
         {posts.map((post) => (
           <div className="post-card" key={post._id}>
             <div className="post-header">
-              <div className="avatar-placeholder"></div>
-              <span className="username">{post.user?.username}</span>
+              <div className="avatar-placeholder" />
+              <span className="username">{post.author.username}</span>
             </div>
 
-            <div className="post-content">
-              <p>{post.content}</p>
-            </div>
+            {post.image && (
+              <img src={post.image} alt="Post" className="post-image" />
+            )}
 
-            <div className="post-date">
-              {new Date(post.createdAt).toLocaleString()}
-            </div>
+            {post.caption && <p className="post-caption">{post.caption}</p>}
           </div>
         ))}
+
+        {/* Плашка после всех постов */}
+        {posts.length > 0 && (
+          <div className="empty-feed">
+            <img
+              src="/path/to/placeholder.png"
+              alt="No more updates"
+              className="empty-feed-img"
+            />
+            <h2>You've seen all the updates</h2>
+            <p className="empty-feed-subtext">
+              You have viewed all new publications
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+
+      <Footer />
+    </main>
   );
 }

@@ -1,33 +1,48 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
-  const menuItems = [
-    { title: "Home", icon: "home", path: "/home" },
-    { title: "Search", icon: "search", path: "/search" },
-    { title: "Explore", icon: "explore", path: "/explore" },
-    { title: "Messages", icon: "chat", path: "/messages" },
-    { title: "Notifications", icon: "notifications", path: "/notifications" },
-    { title: "Create", icon: "add_circle", path: "/create" },
-  ];
-
   return (
-    <nav className="menu" role="navigation" aria-label="Main Menu">
-      {menuItems.map((item) => (
-        <NavLink to={item.path} key={item.title} className="link">
-          <span className="link-icon material-symbols-rounded">{item.icon}</span>
-          <span className="link-title">{item.title}</span>
+    <aside className="sidebar">
+      <nav className="sidebar-menu">
+        {/* Основные пункты меню */}
+        <NavLink to="/home" className="sidebar-item">
+          <img src="/icons/home.png" alt="Home" className="sidebar-icon" />
+          <span className="sidebar-text">Home</span>
         </NavLink>
-      ))}
 
-      <NavLink to="/profile" className="link profile-link">
-        <img
-          src="/path-to-avatar.png"
-          alt="Profile"
-          className="link-icon profile-icon"
-        />
-        <span className="link-title">Profile</span>
-      </NavLink>
-    </nav>
+        <NavLink to="/search" className="sidebar-item">
+          <img src="/icons/search.png" alt="Search" className="sidebar-icon" />
+          <span className="sidebar-text">Search</span>
+        </NavLink>
+
+        <NavLink to="/explore" className="sidebar-item">
+          <img src="/icons/explore.png" alt="Explore" className="sidebar-icon" />
+          <span className="sidebar-text">Explore</span>
+        </NavLink>
+
+        <NavLink to="/messages" className="sidebar-item">
+          <img src="/icons/messages.png" alt="Messages" className="sidebar-icon" />
+          <span className="sidebar-text">Messages</span>
+        </NavLink>
+
+        <NavLink to="/notifications" className="sidebar-item">
+          <img src="/icons/notifications.png" alt="Notifications" className="sidebar-icon" />
+          <span className="sidebar-text">Notifications</span>
+        </NavLink>
+
+        <NavLink to="/create" className="sidebar-item">
+          <img src="/icons/create.png" alt="Create" className="sidebar-icon" />
+          <span className="sidebar-text">Create</span>
+        </NavLink>
+
+        {/* Отделяем пункт профиля внизу */}
+        <div className="sidebar-spacer" />
+
+        <NavLink to="/profile" className="sidebar-item sidebar-profile">
+          <img src="/icons/profile.png" alt="Profile" className="sidebar-icon" />
+          <span className="sidebar-text">Profile</span>
+        </NavLink>
+      </nav>
+    </aside>
   );
 }

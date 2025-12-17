@@ -1,0 +1,25 @@
+.footer {
+  margin-top: 40px;
+  padding: 24px 0;
+  border-top: 1px solid #dbdbdb;
+  text-align: center;
+  font-size: 12px;
+  color: #8e8e8e;
+}
+
+.footer-links {
+  margin-bottom: 12px;
+}
+
+.footer-links span {
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.footer-links span:hover {
+  text-decoration: underline;
+}
+
+.footer-copy {
+  font-size: 11px;
+}

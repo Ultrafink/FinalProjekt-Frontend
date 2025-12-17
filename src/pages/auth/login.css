@@ -145,6 +145,13 @@
   font-weight: 500;
 }
 
+.server-error {
+  color: #ed4956; /* Instagram red */
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
 /* --- Адаптив для мобильных --- */
 @media (max-width: 768px) {
   .login-wrapper {

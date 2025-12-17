@@ -10,6 +10,10 @@ import "./styles/fonts.css";
 import "./styles/trouble.css";
 import "./styles/sidebar.css";
 import "./styles/home.css";
+import "./styles/footer.css";
+import "./styles/layout.css";
+import "./styles/profile.css";
+
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

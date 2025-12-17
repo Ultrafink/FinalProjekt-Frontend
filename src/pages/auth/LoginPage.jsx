@@ -69,6 +69,13 @@ export default function LoginPage() {
                 Log In
               </button>
 
+{/* Не правильный пароль логин */}
+              {error && (
+  <div className="login-error">
+    {error}
+  </div>
+)}
+
               {error && <p className="server-error">{error}</p>}
 
               <div className="or-container">
