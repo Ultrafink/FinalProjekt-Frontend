@@ -26,11 +26,11 @@ export default function MainLayout() {
   const [createdPostEvent, setCreatedPostEvent] = useState(null);
   // shape: { nonce: number, post: object }
 
-  // Global Actions dialog (center)
+  // Global Post actions dialog
   const [actionsOpen, setActionsOpen] = useState(false);
   const [actionsPost, setActionsPost] = useState(null);
 
-  // Global Edit modal
+  // Global Edit post modal
   const [editOpen, setEditOpen] = useState(false);
   const [editPost, setEditPost] = useState(null);
 
@@ -45,12 +45,14 @@ export default function MainLayout() {
     setActivePostId(null);
   };
 
+  // called from any page (via Outlet context)
   const openPostActions = (post) => {
     if (!post) return;
     setActionsPost(post);
     setActionsOpen(true);
   };
 
+  // called from any page (via Outlet context)
   const openEditPost = (post) => {
     if (!post) return;
     setEditPost(post);
@@ -74,6 +76,10 @@ export default function MainLayout() {
     };
   }, []);
 
+  // ✅ НОРМАЛЬНОЕ вычисление прав (безопасный дефолт = false)
+  const canEditDelete =
+    !!actionsPost?.author?.id && !!me?.id && me.id === actionsPost.author.id;
+
   return (
     <div className="app-layout">
       <Sidebar me={me} onCreate={() => setCreateOpen(true)} />
@@ -85,13 +91,16 @@ export default function MainLayout() {
             setMe,
             feedRefreshKey,
             setFeedRefreshKey,
+
+            // Post modal
             openPost,
             closePost,
 
-            // global dialogs openers
+            // Global dialogs
             openPostActions,
             openEditPost,
 
+            // optimistic delete signal
             deletedPostId,
             setDeletedPostId,
 
@@ -125,16 +134,17 @@ export default function MainLayout() {
         }}
       />
 
-      {/* Center actions dialog (как на картинке) */}
+      {/* Actions dialog (center) */}
       <PostActionsSheet
         open={actionsOpen}
         onClose={() => setActionsOpen(false)}
         postUrl={actionsPost?.id ? `${window.location.origin}/posts/${actionsPost.id}` : ""}
-        canEdit={true}
-        canDelete={true}
+        canEdit={canEditDelete}
+        canDelete={canEditDelete}
         onGoToPost={() => {
           if (!actionsPost?.id) return;
-          // если у тебя нет отдельной страницы поста — замени на openPost(actionsPost.id)
+
+          // если нет отдельной страницы поста — замени на openPost(actionsPost.id)
           navigate(`/posts/${actionsPost.id}`);
         }}
         onEdit={() => {
@@ -143,23 +153,24 @@ export default function MainLayout() {
         }}
         onDelete={async () => {
           if (!actionsPost?.id) return;
+
           await axios.delete(`/posts/${actionsPost.id}`);
+
           setActionsOpen(false);
 
-          // сигнал страницам для оптимистичного удаления
+          // signal pages
           setDeletedPostId(actionsPost.id);
           // fallback refetch
           setFeedRefreshKey((x) => x + 1);
         }}
       />
 
-      {/* Edit caption modal */}
+      {/* Edit modal */}
       <EditPostModal
         open={editOpen}
         post={editPost}
         onClose={() => setEditOpen(false)}
         onUpdated={() => {
-          // универсальный fallback
           setFeedRefreshKey((x) => x + 1);
         }}
       />

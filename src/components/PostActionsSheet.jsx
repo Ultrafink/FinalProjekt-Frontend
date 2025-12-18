@@ -1,28 +1,41 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function PostActionsSheet({
   open,
   onClose,
+
   onDelete,
   onEdit,
   onGoToPost,
+
   postUrl,
+
   canEdit = false,
   canDelete = false,
+
+  showGoToPost = true,
+  showCopyLink = true,
 }) {
   const [deleting, setDeleting] = useState(false);
   const [copyState, setCopyState] = useState("idle"); // idle | ok | error
 
-  const showDelete = !!onDelete && canDelete;
-  const showEdit = !!onEdit && canEdit;
+  const canCopy = useMemo(
+    () => typeof postUrl === "string" && postUrl.trim().length > 0,
+    [postUrl]
+  );
 
-  const canCopy = useMemo(() => typeof postUrl === "string" && postUrl.trim().length > 0, [postUrl]);
+  const closeIfAllowed = useCallback(() => {
+    if (deleting) return;
+    setDeleting(false);
+    setCopyState("idle");
+    onClose?.();
+  }, [deleting, onClose]);
 
   useEffect(() => {
     if (!open) return;
 
     const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") closeIfAllowed();
     };
 
     document.addEventListener("keydown", onKeyDown);
@@ -33,19 +46,12 @@ export default function PostActionsSheet({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, onClose]);
+  }, [open, closeIfAllowed]);
 
-  if (!open) return null;
-
-  const closeIfAllowed = () => {
+  const handleDelete = useCallback(async () => {
+    if (!canDelete || typeof onDelete !== "function") return;
     if (deleting) return;
-    setDeleting(false);
-    setCopyState("idle");
-    onClose?.();
-  };
 
-  const handleDelete = async () => {
-    if (!onDelete || deleting) return;
     try {
       setDeleting(true);
       await onDelete();
@@ -56,10 +62,27 @@ export default function PostActionsSheet({
       console.error("Delete failed:", e);
       setDeleting(false);
     }
-  };
+  }, [canDelete, deleting, onClose, onDelete]);
 
-  const handleCopy = async () => {
-    if (!canCopy || deleting) return;
+  const handleEdit = useCallback(() => {
+    if (!canEdit || typeof onEdit !== "function") return;
+    if (deleting) return;
+
+    onEdit();
+    onClose?.();
+  }, [canEdit, deleting, onClose, onEdit]);
+
+  const handleGoToPost = useCallback(() => {
+    if (!showGoToPost || typeof onGoToPost !== "function") return;
+    if (deleting) return;
+
+    onGoToPost();
+    onClose?.();
+  }, [deleting, onClose, onGoToPost, showGoToPost]);
+
+  const handleCopy = useCallback(async () => {
+    if (!showCopyLink) return;
+    if (deleting || !canCopy) return;
 
     try {
       await navigator.clipboard.writeText(postUrl);
@@ -71,54 +94,97 @@ export default function PostActionsSheet({
       setCopyState("error");
       setTimeout(() => setCopyState("idle"), 1200);
     }
-  };
+  }, [canCopy, deleting, onClose, postUrl, showCopyLink]);
 
-  const handleEdit = () => {
-    if (deleting) return;
-    onEdit?.();
-    closeIfAllowed();
-  };
+  const items = useMemo(() => {
+    const list = [];
 
-  const handleGoToPost = () => {
-    if (deleting) return;
-    onGoToPost?.();
-    closeIfAllowed();
-  };
+    if (canDelete && typeof onDelete === "function") {
+      list.push({
+        key: "delete",
+        label: deleting ? "Deleting..." : "Delete",
+        className: "pas-danger",
+        disabled: deleting,
+        onClick: handleDelete,
+      });
+    }
+
+    if (canEdit && typeof onEdit === "function") {
+      list.push({
+        key: "edit",
+        label: "Edit",
+        disabled: deleting,
+        onClick: handleEdit,
+      });
+    }
+
+    if (showGoToPost && typeof onGoToPost === "function") {
+      list.push({
+        key: "goto",
+        label: "Go to post",
+        disabled: deleting,
+        onClick: handleGoToPost,
+      });
+    }
+
+    if (showCopyLink) {
+      list.push({
+        key: "copy",
+        label:
+          copyState === "ok"
+            ? "Copied"
+            : copyState === "error"
+              ? "Copy failed"
+              : "Copy link",
+        disabled: deleting || !canCopy,
+        onClick: handleCopy,
+      });
+    }
+
+    // Cancel — всегда
+    list.push({
+      key: "cancel",
+      label: "Cancel",
+      className: "pas-cancel",
+      disabled: deleting,
+      onClick: closeIfAllowed,
+    });
+
+    return list;
+  }, [
+    canCopy,
+    canDelete,
+    canEdit,
+    closeIfAllowed,
+    copyState,
+    deleting,
+    handleCopy,
+    handleDelete,
+    handleEdit,
+    handleGoToPost,
+    onDelete,
+    onEdit,
+    onGoToPost,
+    showCopyLink,
+    showGoToPost,
+  ]);
+
+  if (!open) return null;
 
   return (
     <div className="pas-overlay" onMouseDown={closeIfAllowed} role="dialog" aria-modal="true">
       <div className="pas-card" onMouseDown={(e) => e.stopPropagation()}>
-        {showDelete && (
-          <button className="pas-item pas-danger" onClick={handleDelete} disabled={deleting} type="button">
-            {deleting ? "Deleting..." : "Delete"}
+        {items.map((it) => (
+          <button
+            key={it.key}
+            className={`pas-item ${it.className || ""}`}
+            onClick={it.onClick}
+            disabled={it.disabled}
+            type="button"
+          >
+            {it.label}
           </button>
-        )}
-
-        {showEdit && (
-          <button className="pas-item" onClick={handleEdit} disabled={deleting} type="button">
-            Edit
-          </button>
-        )}
-
-        {!!onGoToPost && (
-          <button className="pas-item" onClick={handleGoToPost} disabled={deleting} type="button">
-            Go to post
-          </button>
-        )}
-
-        <button
-          className="pas-item"
-          onClick={handleCopy}
-          disabled={deleting || !canCopy}
-          type="button"
-          title={!canCopy ? "No link available" : "Copy link"}
-        >
-          {copyState === "ok" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy link"}
-        </button>
-
-        <button className="pas-item pas-cancel" onClick={closeIfAllowed} disabled={deleting} type="button">
-          Cancel
-        </button>
+        ))}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ export default function EditPostModal({ open, post, onClose, onUpdated }) {
   const postId = post?.id ?? null;
   const initialCaption = useMemo(() => post?.caption ?? "", [post?.caption]);
 
-  // draft: null => показываем initialCaption (не нужен эффект-ресет)
+  // draft: null => показываем initialCaption
   const [draft, setDraft] = useState(null); // string | null
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
