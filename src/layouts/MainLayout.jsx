@@ -152,6 +152,9 @@ export default function MainLayout() {
           setFeedRefreshKey((x) => x + 1);
         }}
       />
+      
+console.log("meId", me?._id || me?.id);
+console.log("actionsPost", actionsPost);
 
       <PostActionsSheet
         open={actionsOpen}
