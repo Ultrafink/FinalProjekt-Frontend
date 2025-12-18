@@ -7,6 +7,8 @@ import { mediaUrl } from "../utils/mediaUrl";
 export default function HomePage() {
   const outlet = useOutletContext() || {};
   const feedRefreshKey = outlet.feedRefreshKey ?? 0;
+  const openPost = outlet.openPost;
+  const deletedPostId = outlet.deletedPostId;
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,12 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedRefreshKey]);
 
+  // ✅ optimistic remove after delete
+  useEffect(() => {
+    if (!deletedPostId) return;
+    setPosts((prev) => prev.filter((p) => p._id !== deletedPostId));
+  }, [deletedPostId]); // filter for remove [web:851]
+
   if (loading) return <div className="home-loading">Loading...</div>;
 
   return (
@@ -42,9 +50,7 @@ export default function HomePage() {
               className="empty-feed-img"
             />
             <h2>You've seen all the updates</h2>
-            <p className="empty-feed-subtext">
-              You have viewed all new publications
-            </p>
+            <p className="empty-feed-subtext">You have viewed all new publications</p>
           </div>
         ) : (
           <>
@@ -60,9 +66,7 @@ export default function HomePage() {
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <span className="username">
-                    {post.author?.username || "User"}
-                  </span>
+                  <span className="username">{post.author?.username || "User"}</span>
                 </div>
 
                 {post.image && (
@@ -71,6 +75,8 @@ export default function HomePage() {
                     alt="Post"
                     className="post-image"
                     loading="lazy"
+                    onClick={() => openPost?.(post._id)}
+                    style={{ cursor: "pointer" }}
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                     }}

@@ -14,6 +14,10 @@ import ProtectedLayout from "./ProtectedLayout";
 import PublicOnlyLayout from "./PublicOnlyLayout";
 
 import ExplorePage from "../pages/ExplorePage";
+
+import ProfileRoutePage from "../pages/ProfileRoutePage";
+
+
 export default function AppRouter() {
   return (
     <Routes>
@@ -34,7 +38,7 @@ export default function AppRouter() {
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/profile/edit" element={<ProfileEditPage />} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={<ProfileRoutePage />} />
           <Route path="/explore" element={<ExplorePage />} />
         </Route>
       </Route>

@@ -1,11 +1,14 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import { useAuth } from "../context/useAuth";
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+
+  const outlet = useOutletContext() || {};
+  const setMe = outlet.setMe;
 
   const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
@@ -17,7 +20,13 @@ export default function ProfileEditPage() {
     avatar: "",
   });
 
-  const [initialForm, setInitialForm] = useState({});
+  const [initialForm, setInitialForm] = useState({
+    username: "",
+    website: "",
+    about: "",
+    avatar: "",
+  });
+
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hideSaved, setHideSaved] = useState(false);
@@ -32,26 +41,36 @@ export default function ProfileEditPage() {
     return `${base}${value.startsWith("/") ? "" : "/"}${value}`;
   };
 
+  const applyMeToForm = (meData) => {
+    const next = {
+      username: meData?.username || "",
+      website: meData?.website || "",
+      about: meData?.about || "",
+      avatar: normalizeAvatarUrl(meData?.avatar || ""),
+    };
+    setForm(next);
+    setInitialForm(next);
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
+    let alive = true;
+
+    (async () => {
       try {
         const res = await axios.get("/users/me");
-        const next = {
-          username: res.data.username || "",
-          website: res.data.website || "",
-          about: res.data.about || "",
-          avatar: normalizeAvatarUrl(res.data.avatar || ""),
-        };
-        setForm(next);
-        setInitialForm(next);
+        if (!alive) return;
+        applyMeToForm(res.data);
       } catch (err) {
         console.error("Profile load error:", err);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
-    };
+    })();
 
-    fetchProfile();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -70,6 +89,13 @@ export default function ProfileEditPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const showSavedToast = () => {
+    setSaved(true);
+    setHideSaved(false);
+    setTimeout(() => setHideSaved(true), 2000);
+    setTimeout(() => setSaved(false), 2300);
+  };
+
   const handleSave = async (e) => {
     e?.preventDefault?.();
 
@@ -80,12 +106,13 @@ export default function ProfileEditPage() {
         about: form.about,
       });
 
-      setInitialForm({ ...form });
-      setSaved(true);
-      setHideSaved(false);
+      // подтягиваем актуального юзера и обновляем общий state (Sidebar обновится)
+      const meRes = await axios.get("/users/me");
+      setMe?.(meRes.data);
 
-      setTimeout(() => setHideSaved(true), 2000);
-      setTimeout(() => setSaved(false), 2300);
+      // синхронизируем форму
+      applyMeToForm(meRes.data);
+      showSavedToast();
     } catch (err) {
       console.error("Save profile error:", err);
       const msg =
@@ -105,11 +132,13 @@ export default function ProfileEditPage() {
     data.append("avatar", file);
 
     try {
-      const res = await axios.patch("/users/me/avatar", data);
-      setForm((prev) => ({
-        ...prev,
-        avatar: normalizeAvatarUrl(res.data.avatar),
-      }));
+      await axios.patch("/users/me/avatar", data);
+
+      // снова берём "me" как source-of-truth и обновляем Sidebar + форму
+      const meRes = await axios.get("/users/me");
+      setMe?.(meRes.data);
+      applyMeToForm(meRes.data);
+      showSavedToast();
     } catch (err) {
       console.error("Avatar upload error:", err);
       const msg =
@@ -143,7 +172,11 @@ export default function ProfileEditPage() {
 
         <div className="profile-header-box">
           <div className="profile-avatar">
-            {form.avatar ? <img src={form.avatar} alt="avatar" /> : <div className="avatar-placeholder" />}
+            {form.avatar ? (
+              <img src={form.avatar} alt="avatar" />
+            ) : (
+              <div className="avatar-placeholder" />
+            )}
           </div>
 
           <div className="profile-about-preview">
@@ -211,7 +244,6 @@ export default function ProfileEditPage() {
             Save
           </button>
 
-          {/* Logout */}
           <button
             type="button"
             className="logout-btn"

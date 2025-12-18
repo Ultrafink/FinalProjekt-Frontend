@@ -153,9 +153,14 @@
   background: #fff;
 }
 
-.create-caption textarea,
+.create-caption textarea{
+  font-family: inherit !important;
+  font-size: 14px;
+  font-weight: 400;
+}
+
 .create-caption textarea::placeholder{
-  font-family: inherit;
+  font-family: inherit !important;
   font-size: 14px;
   font-weight: 400;
 }

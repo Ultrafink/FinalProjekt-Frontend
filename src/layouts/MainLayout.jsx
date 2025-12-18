@@ -3,11 +3,31 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "../utils/axios";
 import CreatePostModal from "../components/CreatePostModal";
+import PostModal from "../components/PostModal";
 
 export default function MainLayout() {
   const [createOpen, setCreateOpen] = useState(false);
+
   const [me, setMe] = useState(null);
   const [feedRefreshKey, setFeedRefreshKey] = useState(0);
+
+  // Post modal
+  const [postModalOpen, setPostModalOpen] = useState(false);
+  const [activePostId, setActivePostId] = useState(null);
+
+  // signal for optimistic delete in pages
+  const [deletedPostId, setDeletedPostId] = useState(null);
+
+  const openPost = (id) => {
+    if (!id) return;
+    setActivePostId(id);
+    setPostModalOpen(true);
+  };
+
+  const closePost = () => {
+    setPostModalOpen(false);
+    setActivePostId(null);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -26,32 +46,42 @@ export default function MainLayout() {
     };
   }, []);
 
-  const reloadMe = async () => {
-    const res = await axios.get("/users/me");
-    setMe(res.data);
-  };
-
   return (
     <div className="app-layout">
-      <Sidebar onCreate={() => setCreateOpen(true)} />
+      <Sidebar me={me} onCreate={() => setCreateOpen(true)} />
 
       <main className="app-content">
-        <Outlet context={{ me, feedRefreshKey }} />
+        <Outlet
+          context={{
+            me,
+            setMe,
+            feedRefreshKey,
+            setFeedRefreshKey,
+            openPost,
+            deletedPostId,       // <- NEW
+            setDeletedPostId,    // <- NEW (если надо вручную)
+          }}
+        />
       </main>
 
       <CreatePostModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         me={me}
-        onCreated={async () => {
-          // обновляем профиль (если нужно)
-          try {
-            await reloadMe();
-          } catch (e) {
-            console.error(e);
-          }
+        onCreated={() => {
+          setFeedRefreshKey((x) => x + 1);
+        }}
+      />
 
-          // обновляем ленты
+      <PostModal
+        open={postModalOpen}
+        postId={activePostId}
+        me={me}
+        onClose={closePost}
+        onDeleted={(id) => {
+          // 1) сигнал страницам: убрать из массива сразу
+          setDeletedPostId(id);
+          // 2) на всякий: обновить ленты, если где-то ещё нужно
           setFeedRefreshKey((x) => x + 1);
         }}
       />

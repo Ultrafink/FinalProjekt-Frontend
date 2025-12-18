@@ -1,0 +1,177 @@
+.post-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.post-modal{
+  width: min(1040px, 96vw);
+  height: min(680px, 92vh);
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.post-loading{
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.post-content{
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+}
+
+.post-left{
+  background: #000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.post-media{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.post-right{
+  display:flex;
+  flex-direction:column;
+  height: 100%;
+}
+
+.post-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 12px 14px;
+}
+
+.post-author{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.post-author-avatar{
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-author-name{
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.post-more{
+  border: 0;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.post-divider{
+  height: 1px;
+  background: #efefef;
+}
+
+.post-scroll{
+  flex: 1;
+  overflow: auto;
+  padding: 14px;
+}
+
+.post-caption-row{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+}
+
+.post-caption-text{
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.post-bold{
+  font-weight: 600;
+}
+
+.post-bottom{
+  padding: 10px 14px 12px;
+}
+
+.post-actions-row{
+  display:flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.post-icon-btn{
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.post-add-comment{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+
+.post-comment-input{
+  flex: 1;
+  border: 0;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.post-send{
+  border: 0;
+  background: transparent;
+  color: #0095f6;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.post-comments{
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-comment-row{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+}
+
+.post-likes{
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 860px){
+  .post-content{
+    grid-template-columns: 1fr;
+  }
+  .post-left{
+    height: 55vh;
+  }
+}

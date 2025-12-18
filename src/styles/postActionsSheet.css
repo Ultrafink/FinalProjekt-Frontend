@@ -1,0 +1,41 @@
+.sheet-overlay{
+  position: fixed;
+  inset: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 1100;
+}
+
+.sheet{
+  width: min(420px, 92vw);
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,.2);
+}
+
+.sheet-item{
+  width: 100%;
+  padding: 14px 16px;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid #efefef;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.sheet-item:last-child{
+  border-bottom: 0;
+}
+
+.sheet-item:disabled{
+  color: #999;
+  cursor: not-allowed;
+}
+
+.sheet-danger{
+  color: #ed4956;
+  font-weight: 600;
+}

@@ -98,6 +98,41 @@
   object-fit: cover;
 }
 
+.profile-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.follow-btn{
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 0;
+  background: #0095f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.follow-btn.unfollow{
+  background: #efefef;
+  color: #111;
+}
+
+.message-btn{
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 0;
+  background: #efefef; /* как edit-profile */
+  color: #111;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+
 /* 🔹 MOBILE */
 @media (max-width: 768px) {
   .profile-top {
