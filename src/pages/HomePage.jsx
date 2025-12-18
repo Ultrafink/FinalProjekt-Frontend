@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
+import EmojiPicker from "emoji-picker-react";
 
 const MAX_CAPTION = 2200;
 
@@ -97,7 +96,6 @@ export default function HomePage() {
       setEmojiAlign(canOpenRight ? "left" : "right");
     };
 
-    // сначала дать поповеру отрендериться
     requestAnimationFrame(() => compute());
 
     window.addEventListener("resize", compute);
@@ -135,22 +133,26 @@ export default function HomePage() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const insertEmoji = (emoji) => {
-    // emoji-mart отдаёт объект, где emoji.native — unicode emoji [web:22]
+  const insertEmoji = (emojiData) => {
+    // emoji-picker-react: второй аргумент содержит объект emoji [web:70]
+    // На практике удобно брать emojiData.emoji (готовый символ)
+    const emoji = emojiData?.emoji || "";
+    if (!emoji) return;
+
     const value = caption;
     const el = captionRef.current;
 
     const start = el?.selectionStart ?? value.length;
     const end = el?.selectionEnd ?? value.length;
 
-    const next = value.slice(0, start) + (emoji?.native || "") + value.slice(end);
+    const next = value.slice(0, start) + emoji + value.slice(end);
     if (next.length > MAX_CAPTION) return;
 
     setCaption(next);
 
     requestAnimationFrame(() => {
       if (!el) return;
-      const pos = start + (emoji?.native ? emoji.native.length : 0);
+      const pos = start + emoji.length;
       el.focus();
       el.setSelectionRange(pos, pos);
     });
@@ -168,7 +170,6 @@ export default function HomePage() {
     try {
       setSubmitting(true);
 
-      // backend ждёт upload.single("image") и caption в req.body
       const fd = new FormData();
       fd.append("image", imageFile);
       fd.append("caption", caption);
@@ -267,12 +268,11 @@ export default function HomePage() {
                   ref={emojiPopoverRef}
                   className={`emoji-popover ${emojiAlign === "right" ? "is-right" : "is-left"}`}
                 >
-                  <Picker
-                    data={data}
-                    onEmojiSelect={insertEmoji}
-                    theme="light"
-                    previewPosition="none"
-                    skinTonePosition="none"
+                  <EmojiPicker
+                    onEmojiClick={(emojiData) => insertEmoji(emojiData)}
+                    autoFocusSearch={false}
+                    searchDisabled={false}
+                    lazyLoadEmojis={true}
                   />
                 </div>
               )}
