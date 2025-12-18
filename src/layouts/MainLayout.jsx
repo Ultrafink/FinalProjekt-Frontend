@@ -18,6 +18,10 @@ export default function MainLayout() {
   // signal for optimistic delete in pages
   const [deletedPostId, setDeletedPostId] = useState(null);
 
+  // ✅ optimistic create event (safe for multiple pages)
+  const [createdPostEvent, setCreatedPostEvent] = useState(null);
+  // shape: { nonce: number, post: object }
+
   const openPost = (id) => {
     if (!id) return;
     setActivePostId(id);
@@ -58,8 +62,12 @@ export default function MainLayout() {
             feedRefreshKey,
             setFeedRefreshKey,
             openPost,
-            deletedPostId,       // <- NEW
-            setDeletedPostId,    // <- NEW (если надо вручную)
+            deletedPostId,
+            setDeletedPostId,
+
+            // ✅ optimistic create
+            createdPostEvent,
+            setCreatedPostEvent,
           }}
         />
       </main>
@@ -68,8 +76,15 @@ export default function MainLayout() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         me={me}
-        onCreated={() => {
-          setFeedRefreshKey((x) => x + 1);
+        onCreated={(post) => {
+          // optimistic event for pages
+          setCreatedPostEvent({
+            nonce: Date.now(),
+            post,
+          });
+
+          // optional fallback refetch trigger (можешь удалить, если хочешь чистый B)
+          // setFeedRefreshKey((x) => x + 1);
         }}
       />
 
@@ -79,9 +94,7 @@ export default function MainLayout() {
         me={me}
         onClose={closePost}
         onDeleted={(id) => {
-          // 1) сигнал страницам: убрать из массива сразу
           setDeletedPostId(id);
-          // 2) на всякий: обновить ленты, если где-то ещё нужно
           setFeedRefreshKey((x) => x + 1);
         }}
       />
