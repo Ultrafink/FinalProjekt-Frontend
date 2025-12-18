@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import { useAuth } from "../context/useAuth";
@@ -17,7 +17,7 @@ export default function ProfileEditPage() {
     username: "",
     website: "",
     about: "",
-    avatar: "",
+    avatar: "", // текущий аватар с сервера (absolute url)
   });
 
   const [initialForm, setInitialForm] = useState({
@@ -26,6 +26,10 @@ export default function ProfileEditPage() {
     about: "",
     avatar: "",
   });
+
+  // ✅ draft avatar (не сохраняем на сервер до Save)
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(""); // objectURL
 
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -73,15 +77,16 @@ export default function ProfileEditPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ✅ рассчитываем dirty (учитываем выбранный avatarFile)
   useEffect(() => {
     const isDirty =
       form.username !== initialForm.username ||
       form.website !== initialForm.website ||
       form.about !== initialForm.about ||
-      form.avatar !== initialForm.avatar;
+      Boolean(avatarFile); // новый аватар выбран, но ещё не сохранён
 
     setDirty(isDirty);
-  }, [form, initialForm]);
+  }, [form, initialForm, avatarFile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,22 +101,56 @@ export default function ProfileEditPage() {
     setTimeout(() => setSaved(false), 2300);
   };
 
+  // ✅ локально показываем превью, но НЕ сохраняем на сервер
+  const onPickAvatar = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarFile(file);
+
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
+
+    // чтобы можно было выбрать тот же файл повторно
+    e.target.value = "";
+  };
+
+  // ✅ чистим objectURL чтобы не текла память
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
+
   const handleSave = async (e) => {
     e?.preventDefault?.();
 
     try {
+      // 1) сохраняем текстовые поля
       await axios.patch("/users/me", {
         username: form.username,
         website: form.website,
         about: form.about,
       });
 
-      // подтягиваем актуального юзера и обновляем общий state (Sidebar обновится)
+      // 2) если выбран файл — сохраняем аватар ТОЛЬКО тут
+      if (avatarFile) {
+        const data = new FormData();
+        data.append("avatar", avatarFile);
+        await axios.patch("/users/me/avatar", data);
+      }
+
+      // 3) подтягиваем актуального пользователя и обновляем общий state
       const meRes = await axios.get("/users/me");
       setMe?.(meRes.data);
 
-      // синхронизируем форму
+      // 4) синхронизируем форму с сервером + сбрасываем draft
       applyMeToForm(meRes.data);
+
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setAvatarPreview("");
+      setAvatarFile(null);
+
       showSavedToast();
     } catch (err) {
       console.error("Save profile error:", err);
@@ -124,38 +163,14 @@ export default function ProfileEditPage() {
     }
   };
 
-  const uploadAvatar = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const data = new FormData();
-    data.append("avatar", file);
-
-    try {
-      await axios.patch("/users/me/avatar", data);
-
-      // снова берём "me" как source-of-truth и обновляем Sidebar + форму
-      const meRes = await axios.get("/users/me");
-      setMe?.(meRes.data);
-      applyMeToForm(meRes.data);
-      showSavedToast();
-    } catch (err) {
-      console.error("Avatar upload error:", err);
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data ||
-        err.message ||
-        "Save error";
-      alert(msg);
-    } finally {
-      e.target.value = "";
-    }
-  };
-
   const onLogout = () => {
     logout();
     navigate("/login", { replace: true });
   };
+
+  const avatarSrc = useMemo(() => {
+    return avatarPreview || form.avatar || "/icons/profile.png";
+  }, [avatarPreview, form.avatar]);
 
   if (loading) return <div className="profile-loading">Loading...</div>;
 
@@ -172,11 +187,7 @@ export default function ProfileEditPage() {
 
         <div className="profile-header-box">
           <div className="profile-avatar">
-            {form.avatar ? (
-              <img src={form.avatar} alt="avatar" />
-            ) : (
-              <div className="avatar-placeholder" />
-            )}
+            <img src={avatarSrc} alt="avatar" />
           </div>
 
           <div className="profile-about-preview">
@@ -196,7 +207,7 @@ export default function ProfileEditPage() {
             type="file"
             hidden
             ref={fileRef}
-            onChange={uploadAvatar}
+            onChange={onPickAvatar}
             accept="image/*"
           />
         </div>
