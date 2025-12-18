@@ -14,7 +14,7 @@ import "./styles/footer.css";
 import "./styles/layout.css";
 import "./styles/profile.css";
 import "./styles/myprofile.css";
-import "./styles/modal.css";
+import "./styles/createModal.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
