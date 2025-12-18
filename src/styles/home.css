@@ -1,7 +1,12 @@
 .home {
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
   padding: 20px 0 40px;
+
+  /* важно, если родитель - flex */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .home-loading {
@@ -16,6 +21,8 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
+  min-width: 0;
 }
 
 .post-card {
@@ -23,6 +30,10 @@
   border: 1px solid #dbdbdb;
   border-radius: 12px;
   padding: 16px;
+
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .post-header {
@@ -30,34 +41,47 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
+  min-width: 0;
 }
 
-.avatar-placeholder {
+/* ВАЖНО: у тебя в JSX есть className="post-avatar", а в CSS был .avatar-placeholder
+   поэтому аватар мог выглядеть как попало */
+.post-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #ddd;
+  flex: 0 0 40px;
+  object-fit: cover;
+  background: #eee;
 }
 
 .username {
   font-weight: 600;
   color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Картинки в карточке */
 .post-image {
   width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
+
   border-radius: 10px;
   border: 1px solid #efefef;
   margin-top: 8px;
 }
 
+/* Текст */
 .post-caption {
   margin: 10px 0 0;
   font-size: 15px;
   line-height: 1.35;
   color: #111;
+  word-break: break-word;
 }
 
 /* Empty feed */
