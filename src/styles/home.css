@@ -1,12 +1,14 @@
 .home {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px 0 40px;
+  margin-left: 72px;          /* место под sidebar */
+  padding: 40px 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  /* важно, если родитель - flex */
-  flex: 1 1 auto;
-  min-width: 0;
+/* когда sidebar раскрывается на hover */
+.sidebar:hover ~ .app-content .home {
+  margin-left: 220px;
 }
 
 .home-loading {
@@ -16,13 +18,12 @@
   font-size: 14px;
 }
 
-/* ---------- Feed ---------- */
 .feed {
+  width: 470px;               /* как на твоём примере */
+  max-width: calc(100vw - 72px);
   display: flex;
   flex-direction: column;
   gap: 18px;
-  width: 100%;
-  min-width: 0;
 }
 
 .post-card {
@@ -30,9 +31,6 @@
   border: 1px solid #dbdbdb;
   border-radius: 12px;
   padding: 16px;
-
-  width: 100%;
-  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -41,16 +39,12 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
-  min-width: 0;
 }
 
-/* ВАЖНО: у тебя в JSX есть className="post-avatar", а в CSS был .avatar-placeholder
-   поэтому аватар мог выглядеть как попало */
 .post-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  flex: 0 0 40px;
   object-fit: cover;
   background: #eee;
 }
@@ -58,30 +52,21 @@
 .username {
   font-weight: 600;
   color: #111;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* Картинки в карточке */
 .post-image {
   width: 100%;
-  max-width: 100%;
-  height: auto;
   display: block;
-
   border-radius: 10px;
   border: 1px solid #efefef;
   margin-top: 8px;
 }
 
-/* Текст */
 .post-caption {
   margin: 10px 0 0;
   font-size: 15px;
   line-height: 1.35;
   color: #111;
-  word-break: break-word;
 }
 
 /* Empty feed */

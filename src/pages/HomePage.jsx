@@ -1,21 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 import { mediaUrl } from "../utils/mediaUrl";
 
 export default function HomePage() {
-  const outlet = useOutletContext() || {};
-  const feedRefreshKey = outlet.feedRefreshKey ?? 0;
-  const openPost = outlet.openPost;
-  const deletedPostId = outlet.deletedPostId;
-  const createdPostEvent = outlet.createdPostEvent;
+  const outlet = useOutletContext();
+  const feedRefreshKey = outlet?.feedRefreshKey ?? 0;
+  const openPost = outlet?.openPost;
+  const deletedPostId = outlet?.deletedPostId;
+  const createdPostEvent = outlet?.createdPostEvent;
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // вместо useState -> useRef, чтобы не вызывать лишний rerender
-  const lastSeenCreateNonceRef = useRef(0);
 
   const fetchFeed = async () => {
     try {
@@ -35,29 +32,13 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedRefreshKey]);
 
-  // optimistic remove after delete
+  // если удалили/создали — просто перезагрузить как было
   useEffect(() => {
-    if (!deletedPostId) return;
-    setPosts((prev) => prev.filter((p) => p._id !== deletedPostId));
-  }, [deletedPostId]);
-
-  // optimistic insert after create (no refetch, no duplicates)
-  useEffect(() => {
-    const nonce = createdPostEvent?.nonce || 0;
-    const post = createdPostEvent?.post;
-
-    if (!nonce) return;
-    if (nonce <= lastSeenCreateNonceRef.current) return;
-
-    lastSeenCreateNonceRef.current = nonce;
-
-    if (!post?._id) return;
-
-    setPosts((prev) => {
-      if (prev.some((p) => p._id === post._id)) return prev;
-      return [post, ...prev];
-    });
-  }, [createdPostEvent]);
+    if (!deletedPostId && !createdPostEvent) return;
+    setLoading(true);
+    fetchFeed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deletedPostId, createdPostEvent]);
 
   if (loading) return <div className="home-loading">Loading...</div>;
 

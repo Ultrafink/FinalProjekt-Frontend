@@ -87,12 +87,13 @@ export default function PostActionsSheet({
     try {
       await navigator.clipboard.writeText(postUrl);
       setCopyState("ok");
-      onClose?.();
       setTimeout(() => setCopyState("idle"), 1200);
+      onClose?.();
     } catch (e) {
       console.error("Copy failed:", e);
       setCopyState("error");
       setTimeout(() => setCopyState("idle"), 1200);
+      // не закрываем сразу, чтобы было видно "Copy failed"
     }
   }, [canCopy, deleting, onClose, postUrl, showCopyLink]);
 
@@ -141,7 +142,6 @@ export default function PostActionsSheet({
       });
     }
 
-    // Cancel — всегда
     list.push({
       key: "cancel",
       label: "Cancel",
@@ -172,8 +172,13 @@ export default function PostActionsSheet({
   if (!open) return null;
 
   return (
-    <div className="pas-overlay" onMouseDown={closeIfAllowed} role="dialog" aria-modal="true">
-      <div className="pas-card" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className="pas-overlay"
+      onClick={closeIfAllowed}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="pas-card" onClick={(e) => e.stopPropagation()}>
         {items.map((it) => (
           <button
             key={it.key}
