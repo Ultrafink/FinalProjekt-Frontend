@@ -1,8 +1,23 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import "../styles/postActionsSheet.css";
 
-export default function PostActionsSheet({ open, onClose, showDelete, onDelete }) {
+export default function PostActionsSheet({
+  open,
+  onClose,
+
+  showDelete = false,
+  onDelete,
+
+  postId,
+  onEdit,
+  onGoToPost,
+}) {
   const boxRef = useRef(null);
+
+  const copyLink = useMemo(() => {
+    if (!postId) return window.location.href;
+    return `${window.location.origin}/p/${postId}`;
+  }, [postId]);
 
   useEffect(() => {
     if (!open) return;
@@ -11,34 +26,62 @@ export default function PostActionsSheet({ open, onClose, showDelete, onDelete }
       if (e.key === "Escape") onClose?.();
     };
 
-    const onMouseDown = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) onClose?.();
-    };
-
     window.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onMouseDown);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onMouseDown);
-    };
-  }, [open, onClose]); // click-outside + esc [web:682][web:716]
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="sheet-overlay">
-      <div className="sheet" ref={boxRef} role="dialog" aria-modal="true">
+    <div
+      className="sheet-overlay"
+      role="presentation"
+      onMouseDown={() => onClose?.()} // клик по фону закрывает
+    >
+      <div
+        className="sheet"
+        ref={boxRef}
+        role="dialog"
+        aria-modal="true"
+        onMouseDown={(e) => e.stopPropagation()} // клики внутри НЕ закрывают
+      >
         {showDelete ? (
-          <button className="sheet-item sheet-danger" type="button" onClick={onDelete}>
+          <button
+            className="sheet-item sheet-danger"
+            type="button"
+            onClick={async () => {
+              try {
+                await onDelete?.();
+              } finally {
+                onClose?.();
+              }
+            }}
+          >
             Delete
           </button>
         ) : null}
 
-        <button className="sheet-item" type="button" disabled>
+        <button
+          className="sheet-item"
+          type="button"
+          onClick={() => {
+            onEdit?.();
+            onClose?.();
+          }}
+          disabled={!onEdit}
+        >
           Edit
         </button>
 
-        <button className="sheet-item" type="button" disabled>
+        <button
+          className="sheet-item"
+          type="button"
+          onClick={() => {
+            onGoToPost?.();
+            onClose?.();
+          }}
+          disabled={!onGoToPost}
+        >
           Go to post
         </button>
 
@@ -47,7 +90,7 @@ export default function PostActionsSheet({ open, onClose, showDelete, onDelete }
           type="button"
           onClick={async () => {
             try {
-              await navigator.clipboard.writeText(window.location.href);
+              await navigator.clipboard.writeText(copyLink);
             } catch {
               // ignore
             }
@@ -57,7 +100,7 @@ export default function PostActionsSheet({ open, onClose, showDelete, onDelete }
           Copy link
         </button>
 
-        <button className="sheet-item" type="button" onClick={onClose}>
+        <button className="sheet-item" type="button" onClick={() => onClose?.()}>
           Cancel
         </button>
       </div>

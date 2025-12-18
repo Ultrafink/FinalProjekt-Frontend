@@ -8,9 +8,17 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
-  // ✅ берем общий openPost из MainLayout
+  // ✅ контекст из MainLayout
   const outlet = useOutletContext() || {};
   const openPost = outlet.openPost;
+
+  const deletedPostId = outlet.deletedPostId;
+  const setDeletedPostId = outlet.setDeletedPostId;
+
+  const createdPostEvent = outlet.createdPostEvent;
+  // const setCreatedPostEvent = outlet.setCreatedPostEvent; // не обязателен
+
+  const me = outlet.me; // текущий пользователь (из /users/me), может быть null
 
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
@@ -30,6 +38,7 @@ export default function ProfilePage() {
     };
   }, [apiUrl]);
 
+  // initial load
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
@@ -44,6 +53,9 @@ export default function ProfilePage() {
 
         const list = Array.isArray(postsRes.data) ? postsRes.data : [];
         setPosts(list);
+
+        // на всякий случай синхронизируем posts count с реальным
+        setStats((prev) => (prev ? { ...prev, posts: list.length } : prev));
       } catch (err) {
         console.error("Profile load error:", err);
         setUser(null);
@@ -56,6 +68,38 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [username]);
+
+  // ✅ optimistic delete from PostModal in MainLayout
+  useEffect(() => {
+    if (!deletedPostId) return;
+
+    setPosts((prev) => prev.filter((p) => String(p._id) !== String(deletedPostId)));
+    setStats((prev) =>
+      prev ? { ...prev, posts: Math.max(0, (prev.posts ?? 0) - 1) } : prev
+    );
+
+    // сбрасываем, чтобы событие не применялось снова
+    setDeletedPostId?.(null);
+  }, [deletedPostId, setDeletedPostId]);
+
+  // ✅ optimistic create from CreatePostModal in MainLayout
+  useEffect(() => {
+    if (!createdPostEvent?.post) return;
+
+    // добавляем только если это МОЙ профиль (username в url == мой username)
+    const myUsername = me?.username || authUser?.username;
+    if (!myUsername || myUsername !== username) return;
+
+    const newPost = createdPostEvent.post;
+
+    setPosts((prev) => {
+      // защита от дублей
+      if (prev.some((p) => String(p._id) === String(newPost._id))) return prev;
+      return [newPost, ...prev];
+    });
+
+    setStats((prev) => (prev ? { ...prev, posts: (prev.posts ?? 0) + 1 } : prev));
+  }, [createdPostEvent?.nonce, createdPostEvent?.post, username, me?.username, authUser?.username]);
 
   if (loading) return <div className="page-loading">Loading...</div>;
   if (!user) return <div>User not found</div>;
@@ -89,7 +133,7 @@ export default function ProfilePage() {
 
           <div className="profile-stats">
             <span>
-              <b>{stats?.posts ?? 0}</b> posts
+              <b>{stats?.posts ?? posts.length ?? 0}</b> posts
             </span>
             <span>
               <b>{stats?.followers ?? 0}</b> followers

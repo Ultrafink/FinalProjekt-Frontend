@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import {
   addComment,
@@ -12,6 +13,8 @@ import PostActionsSheet from "./PostActionsSheet";
 import "../styles/postModal.css";
 
 export default function PostModal({ open, postId, onClose, me, onDeleted }) {
+  const navigate = useNavigate();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -47,6 +50,7 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     let alive = true;
     setLoading(true);
     setCommentText("");
+    setActionsOpen(false);
 
     (async () => {
       try {
@@ -130,6 +134,19 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     }
   };
 
+  // Заглушка для Edit, чтобы кнопка была "живой".
+  // Если у вас есть EditModal/страница редактирования — поменяй реализацию тут.
+  const handleEdit = () => {
+    alert("Edit: пока не реализовано (нужен экран/модалка редактирования)");
+  };
+
+  const handleGoToPost = () => {
+    if (!post?._id) return;
+    setActionsOpen(false);
+    onClose?.();
+    navigate(`/p/${post._id}`);
+  };
+
   return (
     <div className="post-overlay" onMouseDown={onOverlayMouseDown}>
       <div className="post-modal" role="dialog" aria-modal="true">
@@ -153,9 +170,7 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <div className="post-author-name">
-                    {post.author?.username || "user"}
-                  </div>
+                  <div className="post-author-name">{post.author?.username || "user"}</div>
                 </div>
 
                 <button
@@ -256,9 +271,7 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                   </button>
                 </div>
 
-                <div className="post-likes">
-                  {Array.isArray(post.likes) ? post.likes.length : 0} likes
-                </div>
+                <div className="post-likes">{Array.isArray(post.likes) ? post.likes.length : 0} likes</div>
 
                 <div className="post-add-comment">
                   <input
@@ -289,6 +302,9 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                 onClose={() => setActionsOpen(false)}
                 showDelete={isMine}
                 onDelete={handleDelete}
+                postId={post?._id}
+                onEdit={handleEdit}
+                onGoToPost={handleGoToPost}
               />
             </div>
           </div>
