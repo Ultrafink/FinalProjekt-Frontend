@@ -116,7 +116,7 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
 
             {!preview ? (
               <button className="create-drop" onClick={onPickFile} type="button">
-                <img src="/icons/create.png" alt="upload" className="create-drop-icon" />
+                <img src="/icons/upload.png" alt="upload" className="create-drop-icon" />
               </button>
             ) : (
               <div className="create-preview-wrap" onClick={onPickFile} role="button" tabIndex={0}>
