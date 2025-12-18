@@ -169,7 +169,7 @@ export default function PostActionsSheet({
     showGoToPost,
   ]);
 
-  console.log("PAS props", { open, canEdit, canDelete, showGoToPost, showCopyLink, postUrl });
+  
 
   if (!open) return null;
 
