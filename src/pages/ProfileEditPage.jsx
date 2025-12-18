@@ -17,16 +17,28 @@ export default function ProfileEditPage() {
   const [saved, setSaved] = useState(false);
   const [hideSaved, setHideSaved] = useState(false);
 
+  // Приводим avatar к абсолютному URL, если он пришёл как "/uploads/..."
+  const normalizeAvatarUrl = (value) => {
+    if (!value) return "";
+    if (value.startsWith("http://") || value.startsWith("https://")) return value;
+
+    // берем baseURL из твоего axios-инстанса (должен быть backend)
+    const base = axios?.defaults?.baseURL || "";
+    if (!base) return value; // fallback
+
+    return `${base}${value.startsWith("/") ? "" : "/"}${value}`;
+  };
+
   // 🔹 Загрузка профиля
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("/users/me");
+        const res = await axios.get("/users/me"); // оставляем как у тебя
         const next = {
           username: res.data.username || "",
           website: res.data.website || "",
           about: res.data.about || "",
-          avatar: res.data.avatar || "",
+          avatar: normalizeAvatarUrl(res.data.avatar || ""),
         };
         setForm(next);
         setInitialForm(next);
@@ -93,7 +105,11 @@ export default function ProfileEditPage() {
 
     try {
       const res = await axios.patch("/users/me/avatar", data);
-      setForm((prev) => ({ ...prev, avatar: res.data.avatar }));
+      setForm((prev) => ({
+        ...prev,
+        avatar: normalizeAvatarUrl(res.data.avatar),
+      }));
+      // если бэк возвращает еще и user целиком, можно аналогично брать res.data.user.avatar
     } catch (err) {
       console.error("Avatar upload error:", err);
       const msg =
@@ -103,7 +119,6 @@ export default function ProfileEditPage() {
         "Save error";
       alert(msg);
     } finally {
-      // чтобы повторно выбрать тот же файл
       e.target.value = "";
     }
   };
@@ -112,7 +127,6 @@ export default function ProfileEditPage() {
 
   return (
     <>
-      {/* 🔥 TOAST */}
       {saved && (
         <div className={`save-toast ${hideSaved ? "hide" : ""}`}>
           Changes saved
@@ -122,7 +136,6 @@ export default function ProfileEditPage() {
       <section className="profile-page">
         <h1 className="profile-title">Edit Profile</h1>
 
-        {/* 🔹 верхний контейнер */}
         <div className="profile-header-box">
           <div className="profile-avatar">
             {form.avatar ? (
@@ -156,7 +169,6 @@ export default function ProfileEditPage() {
           />
         </div>
 
-        {/* 🔹 форма */}
         <form className="profile-form" onSubmit={handleSave}>
           <label>
             Username
