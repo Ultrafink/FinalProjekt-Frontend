@@ -1,10 +1,20 @@
+// src/components/Sidebar.jsx
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 export default function Sidebar({ onCreate }) {
   const { user } = useAuth();
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  const toAbsUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    const normalized = url.startsWith("/") ? url : `/${url}`;
+    return `${apiUrl}${normalized}`;
+  };
 
   const profileTo = user?.username ? `/profile/${user.username}` : "/login";
+  const avatarSrc = toAbsUrl(user?.avatar) || "/icons/profile.png";
 
   return (
     <aside className="sidebar">
@@ -25,11 +35,7 @@ export default function Sidebar({ onCreate }) {
         </NavLink>
 
         <NavLink to="/messages" className="sidebar-item">
-          <img
-            src="/icons/messages.png"
-            alt="Messages"
-            className="sidebar-icon"
-          />
+          <img src="/icons/messages.png" alt="Messages" className="sidebar-icon" />
           <span className="sidebar-text">Messages</span>
         </NavLink>
 
@@ -55,10 +61,14 @@ export default function Sidebar({ onCreate }) {
 
         <NavLink to={profileTo} className="sidebar-item sidebar-profile">
           <img
-            src={user?.avatar || "/icons/profile.png"}
+            src={avatarSrc}
             alt="Profile"
             className="sidebar-icon"
             style={{ borderRadius: "50%", objectFit: "cover" }}
+            onError={(e) => {
+              // если URL битый — подставляем дефолтную иконку
+              e.currentTarget.src = "/icons/profile.png";
+            }}
           />
           <span className="sidebar-text">Profile</span>
         </NavLink>
