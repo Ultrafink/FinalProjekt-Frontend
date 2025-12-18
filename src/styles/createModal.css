@@ -18,6 +18,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  pointer-events: auto;
 }
 
 .create-header{
@@ -64,21 +65,24 @@
   justify-content: center;
 }
 
+/* ВАЖНО: убираем обводку блока, оставляем только иконку */
 .create-drop{
   width: 320px;
   height: 320px;
-  background: #fff;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   cursor: pointer;
   display: grid;
   place-items: center;
+  padding: 0;
 }
 
+/* Увеличиваем иконку */
 .create-drop-icon{
-  width: 64px;
-  height: 64px;
-  opacity: 0.85;
+  width: 140px;
+  height: 140px;
+  opacity: 0.9;
 }
 
 .create-preview-wrap{
@@ -144,6 +148,9 @@
   outline: none;
   font-size: 14px;
   color: #262626;
+
+  /* ВАЖНО: делаем поле белым */
+  background: #fff;
 }
 
 .create-footer{
@@ -190,8 +197,4 @@
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
-}
-
-.create-modal {
-  pointer-events: auto;
 }

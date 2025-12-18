@@ -21,16 +21,27 @@
   flex-grow: 1;
 }
 
+/* базовый пункт */
 .sidebar-item {
   display: flex;
   align-items: center;
   gap: 15px;
   padding: 12px 20px;
-  color: #000; /* текст не синий */
+
+  /* важное: фиксируем цвет, чтобы НЕ синело (a:hover/visited/active) */
+  color: #000;
   text-decoration: none;
+
   font-weight: normal;
   font-size: 16px;
   transition: background-color 0.2s ease;
+}
+
+/* чтобы ссылки точно не красились браузером/глобальными стилями */
+.sidebar-item:visited,
+.sidebar-item:hover,
+.sidebar-item:active {
+  color: #000;
 }
 
 .sidebar-item:hover {
@@ -70,6 +81,15 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
+
+  /* фиксируем цвет как у ссылок */
+  color: #000;
+}
+
+/* Create тоже подсвечивается при hover */
+.sidebar-item.sidebar-create:hover {
+  background-color: #f0f0f0;
+  color: #000;
 }
 
 /* на всякий случай убираем синюю обводку/подсветку */
@@ -77,13 +97,3 @@
 .sidebar-item.sidebar-create:focus-visible {
   outline: none;
 }
-
-.sidebar-item.sidebar-create {
-  background: transparent;
-  border: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-}
-
