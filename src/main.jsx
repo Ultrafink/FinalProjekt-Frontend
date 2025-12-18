@@ -19,6 +19,7 @@ import "./styles/layout.css";
 import "./styles/profile.css";
 import "./styles/myprofile.css";
 import "./styles/createModal.css";
+import "./styles/explore.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

@@ -153,6 +153,13 @@
   background: #fff;
 }
 
+.create-caption textarea,
+.create-caption textarea::placeholder{
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
 .create-footer{
   position: relative;
   border-top: 1px solid #dbdbdb;

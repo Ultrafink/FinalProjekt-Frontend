@@ -20,6 +20,14 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
   const leftReady = !!preview;
   const canShare = leftReady && caption.length <= MAX && !loading;
 
+  const apiBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  const avatarSrc =
+    me?.avatar?.startsWith("http")
+      ? me.avatar
+      : me?.avatar
+        ? `${apiBase}${me.avatar.startsWith("/") ? "" : "/"}${me.avatar}`
+        : "/icons/profile.png";
+
   const reset = () => {
     setFile(null);
     setPreview("");
@@ -91,14 +99,19 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
   };
 
   const share = async () => {
+    if (!file) {
+      alert("Сначала выбери картинку 🙂");
+      return;
+    }
+
     try {
       setLoading(true);
       const created = await createPost({ file, caption });
       onCreated?.(created);
       close();
     } catch (e) {
-      console.error(e);
-      alert("Не получилось создать пост :(");
+      console.error("CREATE POST ERROR:", e?.response?.status, e?.response?.data || e);
+      alert(e?.response?.data?.message || "Не получилось создать пост :(");
       setLoading(false);
     }
   };
@@ -109,7 +122,12 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
         <div className="create-header">
           <div />
           <div className="create-title">Create new post</div>
-          <button className="create-share" onClick={share} disabled={!canShare} type="button">
+          <button
+            className="create-share"
+            onClick={share}
+            disabled={!canShare}
+            type="button"
+          >
             {loading ? "Sharing..." : "Share"}
           </button>
         </div>
@@ -143,7 +161,14 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
           <div className="create-right">
             <div className="create-user">
               <div className="create-avatar">
-                {me?.avatar ? <img src={me.avatar} alt="avatar" /> : null}
+                <img
+                  src={avatarSrc}
+                  alt="avatar"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/icons/profile.png";
+                  }}
+                />
               </div>
               <div className="create-username">{me?.username || "username"}</div>
             </div>
@@ -155,6 +180,7 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
                 onChange={(e) => setCaption(e.target.value.slice(0, MAX))}
                 placeholder="Write a caption..."
                 rows={8}
+                style={{ fontFamily: "inherit" }}   // шрифт как в проекте
               />
             </div>
 

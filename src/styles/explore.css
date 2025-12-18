@@ -1,0 +1,90 @@
+.explore-page{
+  width: 100%;
+  padding: 24px 24px 60px;
+  box-sizing: border-box;
+}
+
+.explore-grid{
+  max-width: 980px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+/* плитка */
+.explore-tile{
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.explore-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* hover затемнение как в IG */
+.explore-overlay{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background-color 0.2s ease;
+}
+
+.explore-tile:hover .explore-overlay{
+  background: rgba(0,0,0,0.12);
+}
+
+/* "большая" плитка: занимает 2x2 */
+.explore-tile.is-big{
+  grid-column: span 2;
+  grid-row: span 2;
+  aspect-ratio: auto;   /* чтобы grid-row/span работал предсказуемо */
+  height: 100%;
+}
+
+/* чтобы big-плитка была квадратная 2x2 */
+.explore-tile.is-big::before{
+  content: "";
+  float: left;
+  padding-top: 100%;
+}
+.explore-tile.is-big::after{
+  content: "";
+  display: block;
+  clear: both;
+}
+.explore-tile.is-big .explore-img{
+  position: absolute;
+  inset: 0;
+}
+
+/* адаптив */
+@media (max-width: 900px){
+  .explore-page{
+    padding: 18px 14px 60px;
+  }
+  .explore-grid{
+    gap: 4px;
+  }
+}
+
+@media (max-width: 640px){
+  .explore-grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .explore-tile.is-big{
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+}

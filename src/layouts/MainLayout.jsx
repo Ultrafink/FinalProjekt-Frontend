@@ -7,33 +7,52 @@ import CreatePostModal from "../components/CreatePostModal";
 export default function MainLayout() {
   const [createOpen, setCreateOpen] = useState(false);
   const [me, setMe] = useState(null);
+  const [feedRefreshKey, setFeedRefreshKey] = useState(0);
 
   useEffect(() => {
-    const loadMe = async () => {
+    let alive = true;
+
+    (async () => {
       try {
         const res = await axios.get("/users/me");
-        setMe(res.data);
+        if (alive) setMe(res.data);
       } catch (e) {
         console.error(e);
       }
+    })();
+
+    return () => {
+      alive = false;
     };
-    loadMe();
   }, []);
+
+  const reloadMe = async () => {
+    const res = await axios.get("/users/me");
+    setMe(res.data);
+  };
 
   return (
     <div className="app-layout">
       <Sidebar onCreate={() => setCreateOpen(true)} />
 
       <main className="app-content">
-        <Outlet />
+        <Outlet context={{ me, feedRefreshKey }} />
       </main>
 
       <CreatePostModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         me={me}
-        onCreated={() => {
-          // позже можно обновить ленту/профиль
+        onCreated={async () => {
+          // обновляем профиль (если нужно)
+          try {
+            await reloadMe();
+          } catch (e) {
+            console.error(e);
+          }
+
+          // обновляем ленты
+          setFeedRefreshKey((x) => x + 1);
         }}
       />
     </div>
