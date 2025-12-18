@@ -1,11 +1,15 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "../utils/axios";
 import CreatePostModal from "../components/CreatePostModal";
 import PostModal from "../components/PostModal";
+import EditPostModal from "../components/EditPostModal";
+import PostActionsSheet from "../components/PostActionsSheet";
 
 export default function MainLayout() {
+  const navigate = useNavigate();
+
   const [createOpen, setCreateOpen] = useState(false);
 
   const [me, setMe] = useState(null);
@@ -22,6 +26,14 @@ export default function MainLayout() {
   const [createdPostEvent, setCreatedPostEvent] = useState(null);
   // shape: { nonce: number, post: object }
 
+  // Global Actions dialog (center)
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionsPost, setActionsPost] = useState(null);
+
+  // Global Edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editPost, setEditPost] = useState(null);
+
   const openPost = (id) => {
     if (!id) return;
     setActivePostId(id);
@@ -31,6 +43,18 @@ export default function MainLayout() {
   const closePost = () => {
     setPostModalOpen(false);
     setActivePostId(null);
+  };
+
+  const openPostActions = (post) => {
+    if (!post) return;
+    setActionsPost(post);
+    setActionsOpen(true);
+  };
+
+  const openEditPost = (post) => {
+    if (!post) return;
+    setEditPost(post);
+    setEditOpen(true);
   };
 
   useEffect(() => {
@@ -62,6 +86,12 @@ export default function MainLayout() {
             feedRefreshKey,
             setFeedRefreshKey,
             openPost,
+            closePost,
+
+            // global dialogs openers
+            openPostActions,
+            openEditPost,
+
             deletedPostId,
             setDeletedPostId,
 
@@ -77,14 +107,10 @@ export default function MainLayout() {
         onClose={() => setCreateOpen(false)}
         me={me}
         onCreated={(post) => {
-          // optimistic event for pages
           setCreatedPostEvent({
             nonce: Date.now(),
             post,
           });
-
-          // optional fallback refetch trigger (можешь удалить, если хочешь чистый B)
-          // setFeedRefreshKey((x) => x + 1);
         }}
       />
 
@@ -95,6 +121,45 @@ export default function MainLayout() {
         onClose={closePost}
         onDeleted={(id) => {
           setDeletedPostId(id);
+          setFeedRefreshKey((x) => x + 1);
+        }}
+      />
+
+      {/* Center actions dialog (как на картинке) */}
+      <PostActionsSheet
+        open={actionsOpen}
+        onClose={() => setActionsOpen(false)}
+        postUrl={actionsPost?.id ? `${window.location.origin}/posts/${actionsPost.id}` : ""}
+        canEdit={true}
+        canDelete={true}
+        onGoToPost={() => {
+          if (!actionsPost?.id) return;
+          // если у тебя нет отдельной страницы поста — замени на openPost(actionsPost.id)
+          navigate(`/posts/${actionsPost.id}`);
+        }}
+        onEdit={() => {
+          setActionsOpen(false);
+          openEditPost(actionsPost);
+        }}
+        onDelete={async () => {
+          if (!actionsPost?.id) return;
+          await axios.delete(`/posts/${actionsPost.id}`);
+          setActionsOpen(false);
+
+          // сигнал страницам для оптимистичного удаления
+          setDeletedPostId(actionsPost.id);
+          // fallback refetch
+          setFeedRefreshKey((x) => x + 1);
+        }}
+      />
+
+      {/* Edit caption modal */}
+      <EditPostModal
+        open={editOpen}
+        post={editPost}
+        onClose={() => setEditOpen(false)}
+        onUpdated={() => {
+          // универсальный fallback
           setFeedRefreshKey((x) => x + 1);
         }}
       />

@@ -1,0 +1,74 @@
+.cpm-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.cpm-card{
+  width: min(560px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+}
+
+.cpm-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.cpm-title{
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cpm-header-btn{
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 6px 8px;
+  color: #111;
+}
+
+.cpm-header-btn:disabled{
+  opacity: 0.6;
+  cursor: default;
+}
+
+.cpm-primary{
+  color: #0a66ff;
+  font-weight: 600;
+}
+
+.cpm-body{
+  padding: 12px 14px;
+}
+
+.cpm-textarea{
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.cpm-textarea:disabled{
+  background: #fafafa;
+}
+
+.cpm-error{
+  margin-top: 10px;
+  font-size: 13px;
+  color: #d93025;
+}

@@ -20,6 +20,8 @@ import "./styles/profile.css";
 import "./styles/myprofile.css";
 import "./styles/createModal.css";
 import "./styles/explore.css";
+import "./styles/postActionsSheet.css";
+import "./styles/editPostModal.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

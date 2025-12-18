@@ -1,106 +1,122 @@
-import { useEffect, useMemo, useRef } from "react";
-import "../styles/postActionsSheet.css";
+import { useEffect, useMemo, useState } from "react";
 
 export default function PostActionsSheet({
   open,
   onClose,
-
-  showDelete = false,
   onDelete,
-
-  postId,
   onEdit,
   onGoToPost,
+  postUrl,
+  canEdit = false,
+  canDelete = false,
 }) {
-  const boxRef = useRef(null);
+  const [deleting, setDeleting] = useState(false);
+  const [copyState, setCopyState] = useState("idle"); // idle | ok | error
 
-  const copyLink = useMemo(() => {
-    if (!postId) return window.location.href;
-    return `${window.location.origin}/p/${postId}`;
-  }, [postId]);
+  const showDelete = !!onDelete && canDelete;
+  const showEdit = !!onEdit && canEdit;
+
+  const canCopy = useMemo(() => typeof postUrl === "string" && postUrl.trim().length > 0, [postUrl]);
 
   useEffect(() => {
     if (!open) return;
 
-    const onKey = (e) => {
+    const onKeyDown = (e) => {
       if (e.key === "Escape") onClose?.();
     };
 
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
+  const closeIfAllowed = () => {
+    if (deleting) return;
+    setDeleting(false);
+    setCopyState("idle");
+    onClose?.();
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete || deleting) return;
+    try {
+      setDeleting(true);
+      await onDelete();
+      setDeleting(false);
+      setCopyState("idle");
+      onClose?.();
+    } catch (e) {
+      console.error("Delete failed:", e);
+      setDeleting(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!canCopy || deleting) return;
+
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      setCopyState("ok");
+      onClose?.();
+      setTimeout(() => setCopyState("idle"), 1200);
+    } catch (e) {
+      console.error("Copy failed:", e);
+      setCopyState("error");
+      setTimeout(() => setCopyState("idle"), 1200);
+    }
+  };
+
+  const handleEdit = () => {
+    if (deleting) return;
+    onEdit?.();
+    closeIfAllowed();
+  };
+
+  const handleGoToPost = () => {
+    if (deleting) return;
+    onGoToPost?.();
+    closeIfAllowed();
+  };
+
   return (
-    <div
-      className="sheet-overlay"
-      role="presentation"
-      onMouseDown={() => onClose?.()} // клик по фону закрывает
-    >
-      <div
-        className="sheet"
-        ref={boxRef}
-        role="dialog"
-        aria-modal="true"
-        onMouseDown={(e) => e.stopPropagation()} // клики внутри НЕ закрывают
-      >
-        {showDelete ? (
-          <button
-            className="sheet-item sheet-danger"
-            type="button"
-            onClick={async () => {
-              try {
-                await onDelete?.();
-              } finally {
-                onClose?.();
-              }
-            }}
-          >
-            Delete
+    <div className="pas-overlay" onMouseDown={closeIfAllowed} role="dialog" aria-modal="true">
+      <div className="pas-card" onMouseDown={(e) => e.stopPropagation()}>
+        {showDelete && (
+          <button className="pas-item pas-danger" onClick={handleDelete} disabled={deleting} type="button">
+            {deleting ? "Deleting..." : "Delete"}
           </button>
-        ) : null}
+        )}
+
+        {showEdit && (
+          <button className="pas-item" onClick={handleEdit} disabled={deleting} type="button">
+            Edit
+          </button>
+        )}
+
+        {!!onGoToPost && (
+          <button className="pas-item" onClick={handleGoToPost} disabled={deleting} type="button">
+            Go to post
+          </button>
+        )}
 
         <button
-          className="sheet-item"
+          className="pas-item"
+          onClick={handleCopy}
+          disabled={deleting || !canCopy}
           type="button"
-          onClick={() => {
-            onEdit?.();
-            onClose?.();
-          }}
-          disabled={!onEdit}
+          title={!canCopy ? "No link available" : "Copy link"}
         >
-          Edit
+          {copyState === "ok" ? "Copied" : copyState === "error" ? "Copy failed" : "Copy link"}
         </button>
 
-        <button
-          className="sheet-item"
-          type="button"
-          onClick={() => {
-            onGoToPost?.();
-            onClose?.();
-          }}
-          disabled={!onGoToPost}
-        >
-          Go to post
-        </button>
-
-        <button
-          className="sheet-item"
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(copyLink);
-            } catch {
-              // ignore
-            }
-            onClose?.();
-          }}
-        >
-          Copy link
-        </button>
-
-        <button className="sheet-item" type="button" onClick={() => onClose?.()}>
+        <button className="pas-item pas-cancel" onClick={closeIfAllowed} disabled={deleting} type="button">
           Cancel
         </button>
       </div>
