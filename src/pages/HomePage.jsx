@@ -6,20 +6,21 @@ export default function HomePage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Загружаем только посты текущего пользователя
-  const fetchMyPosts = async () => {
+  const fetchFeed = async () => {
     try {
-      const res = await axios.get("/posts/me");
-      setPosts(res.data);
+      const res = await axios.get("/posts/feed"); // ленточные посты от подписок
+      const data = Array.isArray(res.data) ? res.data : [];
+      setPosts(data);
     } catch (err) {
-      console.error("Fetch my posts error:", err);
+      console.error("Fetch feed error:", err);
+      setPosts([]); // на случай ошибки
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMyPosts();
+    fetchFeed();
   }, []);
 
   if (loading) {
@@ -47,7 +48,7 @@ export default function HomePage() {
           <div className="post-card" key={post._id}>
             <div className="post-header">
               <div className="avatar-placeholder" />
-              <span className="username">{post.author.username}</span>
+              <span className="username">{post.author?.username || "User"}</span>
             </div>
 
             {post.image && (
@@ -58,11 +59,10 @@ export default function HomePage() {
           </div>
         ))}
 
-        {/* Плашка после всех постов */}
         {posts.length > 0 && (
           <div className="empty-feed">
             <img
-              src="/path/to/placeholder.png"
+              src="/icons/noposts.png"
               alt="No more updates"
               className="empty-feed-img"
             />

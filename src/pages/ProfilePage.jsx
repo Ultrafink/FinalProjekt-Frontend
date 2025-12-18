@@ -7,19 +7,21 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const [userRes, postsRes] = await Promise.all([
+        const [profileRes, postsRes] = await Promise.all([
           axios.get(`/users/${username}`),
           axios.get(`/posts/user/${username}`),
         ]);
 
-        setUser(userRes.data);
-        setPosts(postsRes.data);
+        setUser(profileRes.data.user);
+        setStats(profileRes.data.stats);
+        setPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
       } catch (err) {
         console.error("Profile load error:", err);
       } finally {
@@ -61,18 +63,18 @@ export default function ProfilePage() {
 
           <div className="profile-stats">
             <span>
-              <b>{posts.length}</b> posts
+              <b>{stats?.posts ?? 0}</b> posts
             </span>
             <span>
-              <b>{user.followers?.length || 0}</b> followers
+              <b>{stats?.followers ?? 0}</b> followers
             </span>
             <span>
-              <b>{user.following?.length || 0}</b> following
+              <b>{stats?.following ?? 0}</b> following
             </span>
           </div>
 
           <div className="profile-about">
-            <p>{user.about}</p>
+            {user.about && <p>{user.about}</p>}
             {user.website && (
               <a
                 href={user.website}

@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 
-export default function Sidebar() {
+export default function Sidebar({ onCreate }) {
   return (
     <aside className="sidebar">
       <nav className="sidebar-menu">
@@ -26,14 +26,23 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink to="/notifications" className="sidebar-item">
-          <img src="/icons/notifications.png" alt="Notifications" className="sidebar-icon" />
+          <img
+            src="/icons/notifications.png"
+            alt="Notifications"
+            className="sidebar-icon"
+          />
           <span className="sidebar-text">Notifications</span>
         </NavLink>
 
-        <NavLink to="/create" className="sidebar-item">
+        {/* CREATE — теперь кнопка, не NavLink */}
+        <button
+          type="button"
+          className="sidebar-item sidebar-create"
+          onClick={() => onCreate?.()}
+        >
           <img src="/icons/create.png" alt="Create" className="sidebar-icon" />
           <span className="sidebar-text">Create</span>
-        </NavLink>
+        </button>
 
         {/* Отделяем пункт профиля внизу */}
         <div className="sidebar-spacer" />

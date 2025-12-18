@@ -26,13 +26,10 @@ export default function AppRouter() {
       <Route element={<MainLayout />}>
         <Route path="/home" element={<HomePage />} />
 
-        {/* 👤 мой профиль */}
-        <Route path="/profile" element={<ProfilePage />} />
-
         {/* ✏️ редактирование профиля */}
         <Route path="/profile/edit" element={<ProfileEditPage />} />
 
-        {/* 👥 профиль другого пользователя */}
+        {/* 👤 профиль пользователя */}
         <Route path="/profile/:username" element={<ProfilePage />} />
       </Route>
     </Routes>
