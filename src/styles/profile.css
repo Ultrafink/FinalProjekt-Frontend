@@ -168,14 +168,16 @@
 
 .logout-btn{
   width: 100%;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: none;          /* убрать обводку */
+  background: #ed4956;   /* красная */
+  color: #fff;           /* белый текст */
   padding: 10px 12px;
   border-radius: 10px;
   cursor: pointer;
+  font-weight: 600;
 }
 .logout-btn:hover{
-  background:#f5f5f5;
+  filter: brightness(0.95);
 }
 
 
