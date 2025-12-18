@@ -26,6 +26,21 @@
 }
 
 /* аватар */
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 96px; /* чтобы flex не растягивал */
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .profile-avatar img,
 .avatar-placeholder {
   width: 96px;
