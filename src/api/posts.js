@@ -28,3 +28,8 @@ export const addComment = async (id, text) => {
   const res = await axios.post(`/posts/${id}/comments`, { text });
   return res.data;
 };
+
+export const toggleCommentLike = async (postId, commentId) => {
+  const res = await axios.post(`/posts/${postId}/comments/${commentId}/like`);
+  return res.data;
+};

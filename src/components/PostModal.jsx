@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { addComment, deletePost, getPostById, toggleLike } from "../api/posts";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+import {
+  addComment,
+  deletePost,
+  getPostById,
+  toggleLike,
+  toggleCommentLike,
+} from "../api/posts";
 import { mediaUrl } from "../utils/mediaUrl";
 import PostActionsSheet from "./PostActionsSheet";
 import "../styles/postModal.css";
@@ -12,6 +19,8 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [liking, setLiking] = useState(false);
+
+  const [likingCommentId, setLikingCommentId] = useState(null);
 
   const isMine = !!(post?.author?._id && me?._id && post.author._id === me._id);
 
@@ -106,6 +115,21 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     }
   };
 
+  const handleToggleCommentLike = async (commentId) => {
+    if (!post?._id || !commentId || likingCommentId) return;
+    setLikingCommentId(commentId);
+
+    try {
+      const updated = await toggleCommentLike(post._id, commentId);
+      setPost(updated);
+    } catch (e) {
+      console.error("Comment like error:", e);
+      alert(e?.response?.data?.message || "Не получилось поставить лайк на комментарий");
+    } finally {
+      setLikingCommentId(null);
+    }
+  };
+
   return (
     <div className="post-overlay" onMouseDown={onOverlayMouseDown}>
       <div className="post-modal" role="dialog" aria-modal="true">
@@ -129,7 +153,9 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <div className="post-author-name">{post.author?.username || "user"}</div>
+                  <div className="post-author-name">
+                    {post.author?.username || "user"}
+                  </div>
                 </div>
 
                 <button
@@ -165,23 +191,47 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
 
                 {Array.isArray(post.comments) && post.comments.length > 0 ? (
                   <div className="post-comments">
-                    {post.comments.map((c) => (
-                      <div className="post-comment-row" key={c._id}>
-                        <img
-                          className="post-author-avatar"
-                          src={mediaUrl(c.author?.avatar) || "/icons/profile.png"}
-                          alt="avatar"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "/icons/profile.png";
-                          }}
-                        />
-                        <div className="post-caption-text">
-                          <span className="post-bold">{c.author?.username || "user"}</span>{" "}
-                          {c.text}
+                    {post.comments.map((c) => {
+                      const myId = me?._id;
+                      const likedCommentByMe =
+                        !!myId &&
+                        Array.isArray(c.likes) &&
+                        c.likes.some((id) => String(id) === String(myId));
+
+                      return (
+                        <div className="post-comment-row" key={c._id}>
+                          <img
+                            className="post-author-avatar"
+                            src={mediaUrl(c.author?.avatar) || "/icons/profile.png"}
+                            alt="avatar"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "/icons/profile.png";
+                            }}
+                          />
+
+                          <div className="post-caption-text">
+                            <span className="post-bold">{c.author?.username || "user"}</span>{" "}
+                            {c.text}
+                          </div>
+
+                          <button
+                            type="button"
+                            className="post-icon-btn post-comment-like"
+                            aria-label="Like comment"
+                            title="Like"
+                            onClick={() => handleToggleCommentLike(c._id)}
+                            disabled={likingCommentId === c._id}
+                          >
+                            {likedCommentByMe ? (
+                              <FaHeart className="post-heart post-heart--active" />
+                            ) : (
+                              <FaRegHeart className="post-heart" />
+                            )}
+                          </button>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : null}
               </div>
@@ -198,15 +248,11 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                     disabled={liking}
                     title="Like"
                   >
-                    {likedByMe ? "♥" : "♡"}
-                  </button>
-
-                  <button type="button" className="post-icon-btn" aria-label="Comment" title="Comment">
-                    💬
-                  </button>
-
-                  <button type="button" className="post-icon-btn" aria-label="Share" title="Share">
-                    ✈
+                    {likedByMe ? (
+                      <FaHeart className="post-heart post-heart--active" />
+                    ) : (
+                      <FaRegHeart className="post-heart" />
+                    )}
                   </button>
                 </div>
 
@@ -221,7 +267,10 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSendComment();
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSendComment();
+                      }
                     }}
                   />
                   <button
