@@ -46,11 +46,17 @@
 }
 
 .edit-profile-btn {
-  background: #262626;
-  color: #fff;
-}
-.edit-profile-btn:hover {
   background: #EFEFEF;
+  color: #000;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease; /* плавное затемнение */
+}
+
+.edit-profile-btn:hover {
+  background: #E2E2E2;
 }
 
 .edit-profile-btn:focus,
