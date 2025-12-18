@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
@@ -9,14 +9,13 @@ export default function HomePage() {
   const feedRefreshKey = outlet.feedRefreshKey ?? 0;
   const openPost = outlet.openPost;
   const deletedPostId = outlet.deletedPostId;
-
   const createdPostEvent = outlet.createdPostEvent;
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ each page remembers which create-event it already applied
-  const [lastSeenCreateNonce, setLastSeenCreateNonce] = useState(0);
+  // вместо useState -> useRef, чтобы не вызывать лишний rerender
+  const lastSeenCreateNonceRef = useRef(0);
 
   const fetchFeed = async () => {
     try {
@@ -36,30 +35,29 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedRefreshKey]);
 
-  // ✅ optimistic remove after delete
+  // optimistic remove after delete
   useEffect(() => {
     if (!deletedPostId) return;
     setPosts((prev) => prev.filter((p) => p._id !== deletedPostId));
-  }, [deletedPostId]); // filter for remove [web:1031]
+  }, [deletedPostId]);
 
-  // ✅ optimistic insert after create (no refetch, no duplicates)
+  // optimistic insert after create (no refetch, no duplicates)
   useEffect(() => {
     const nonce = createdPostEvent?.nonce || 0;
     const post = createdPostEvent?.post;
 
-    if (!nonce || nonce <= lastSeenCreateNonce) return;
-    if (!post?._id) {
-      setLastSeenCreateNonce(nonce);
-      return;
-    }
+    if (!nonce) return;
+    if (nonce <= lastSeenCreateNonceRef.current) return;
+
+    lastSeenCreateNonceRef.current = nonce;
+
+    if (!post?._id) return;
 
     setPosts((prev) => {
       if (prev.some((p) => p._id === post._id)) return prev;
       return [post, ...prev];
     });
-
-    setLastSeenCreateNonce(nonce);
-  }, [createdPostEvent, lastSeenCreateNonce]);
+  }, [createdPostEvent]);
 
   if (loading) return <div className="home-loading">Loading...</div>;
 
@@ -74,7 +72,9 @@ export default function HomePage() {
               className="empty-feed-img"
             />
             <h2>You've seen all the updates</h2>
-            <p className="empty-feed-subtext">You have viewed all new publications</p>
+            <p className="empty-feed-subtext">
+              You have viewed all new publications
+            </p>
           </div>
         ) : (
           <>
@@ -90,7 +90,9 @@ export default function HomePage() {
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <span className="username">{post.author?.username || "User"}</span>
+                  <span className="username">
+                    {post.author?.username || "User"}
+                  </span>
                 </div>
 
                 {post.image && (
