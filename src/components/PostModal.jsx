@@ -25,13 +25,14 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
 
   const [likingCommentId, setLikingCommentId] = useState(null);
 
-  const isMine = !!(post?.author?._id && me?._id && post.author._id === me._id);
+  const myId = me?._id || me?.id;
+  const authorId = post?.author?._id || post?.author?.id || post?.author;
+  const isMine = !!(myId && authorId && String(myId) === String(authorId));
 
   const likedByMe = useMemo(() => {
-    const myId = me?._id;
     if (!myId || !post?.likes) return false;
     return post.likes.some((id) => String(id) === String(myId));
-  }, [post?.likes, me?._id]);
+  }, [post?.likes, myId]);
 
   useEffect(() => {
     if (!open) return;
@@ -134,8 +135,6 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     }
   };
 
-  // Заглушка для Edit, чтобы кнопка была "живой".
-  // Если у вас есть EditModal/страница редактирования — поменяй реализацию тут.
   const handleEdit = () => {
     alert("Edit: пока не реализовано (нужен экран/модалка редактирования)");
   };
@@ -146,6 +145,8 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     onClose?.();
     navigate(`/p/${post._id}`);
   };
+
+  const postUrl = post?._id ? `${window.location.origin}/p/${post._id}` : "";
 
   return (
     <div className="post-overlay" onMouseDown={onOverlayMouseDown}>
@@ -207,7 +208,6 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                 {Array.isArray(post.comments) && post.comments.length > 0 ? (
                   <div className="post-comments">
                     {post.comments.map((c) => {
-                      const myId = me?._id;
                       const likedCommentByMe =
                         !!myId &&
                         Array.isArray(c.likes) &&
@@ -271,7 +271,9 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                   </button>
                 </div>
 
-                <div className="post-likes">{Array.isArray(post.likes) ? post.likes.length : 0} likes</div>
+                <div className="post-likes">
+                  {Array.isArray(post.likes) ? post.likes.length : 0} likes
+                </div>
 
                 <div className="post-add-comment">
                   <input
@@ -297,14 +299,18 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                 </div>
               </div>
 
+              {/* FIXED: правильные пропсы под твой PostActionsSheet */}
               <PostActionsSheet
                 open={actionsOpen}
                 onClose={() => setActionsOpen(false)}
-                showDelete={isMine}
                 onDelete={handleDelete}
-                postId={post?._id}
                 onEdit={handleEdit}
                 onGoToPost={handleGoToPost}
+                postUrl={postUrl}
+                canEdit={isMine}
+                canDelete={isMine}
+                showGoToPost={true}
+                showCopyLink={true}
               />
             </div>
           </div>
