@@ -2,19 +2,23 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
+function joinUrl(base, path) {
+  if (!base) return path;
+  const b = base.endsWith("/") ? base.slice(0, -1) : base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${b}${p}`;
+}
+
 export default function Sidebar({ onCreate }) {
   const { user } = useAuth();
-  const apiUrl = import.meta.env.VITE_API_URL;
-
-  const toAbsUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const normalized = url.startsWith("/") ? url : `/${url}`;
-    return `${apiUrl}${normalized}`;
-  };
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const profileTo = user?.username ? `/profile/${user.username}` : "/login";
-  const avatarSrc = toAbsUrl(user?.avatar) || "/icons/profile.png";
+
+  const avatarSrc =
+    user?.avatar
+      ? (user.avatar.startsWith("http") ? user.avatar : joinUrl(API_URL, user.avatar))
+      : "/icons/profile.png";
 
   return (
     <aside className="sidebar">
@@ -40,11 +44,7 @@ export default function Sidebar({ onCreate }) {
         </NavLink>
 
         <NavLink to="/notifications" className="sidebar-item">
-          <img
-            src="/icons/notifications.png"
-            alt="Notifications"
-            className="sidebar-icon"
-          />
+          <img src="/icons/notifications.png" alt="Notifications" className="sidebar-icon" />
           <span className="sidebar-text">Notifications</span>
         </NavLink>
 
@@ -66,7 +66,7 @@ export default function Sidebar({ onCreate }) {
             className="sidebar-icon"
             style={{ borderRadius: "50%", objectFit: "cover" }}
             onError={(e) => {
-              // если URL битый — подставляем дефолтную иконку
+              e.currentTarget.onerror = null;
               e.currentTarget.src = "/icons/profile.png";
             }}
           />

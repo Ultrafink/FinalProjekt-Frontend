@@ -46,11 +46,11 @@
 }
 
 .edit-profile-btn {
-  background: #efefef;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 8px;
-  cursor: pointer;
+  background: #262626;
+  color: #fff;
+}
+.edit-profile-btn:hover {
+  background: #3a3a3a;
 }
 
 .edit-profile-btn:focus,
