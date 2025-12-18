@@ -3,9 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import "./login.css";
 import phoneImg from "../../assets/landing-2x.png";
 import axios from "../../utils/axios";
+import { setToken } from "../../utils/auth";
+import { useAuth } from "../../context/useAuth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { refreshMe } = useAuth();
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,10 +25,13 @@ export default function LoginPage() {
       });
 
       // сохраняем JWT
-      localStorage.setItem("token", res.data.token);
+      setToken(res.data.token);
+
+      // важно: сразу обновляем контекст (подтянет /auth/me)
+      await refreshMe();
 
       // редирект на домашнюю страницу
-      navigate("/home");
+      navigate("/home", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
@@ -34,14 +40,11 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-wrapper">
-        {/* Левый блок — телефон с скриншотами (только десктоп) */}
         <div className="login-left">
           <img src={phoneImg} alt="Phone screens" className="login-left-img" />
         </div>
 
-        {/* Правый блок — форма */}
         <div className="login-right">
-          {/* Карточка логина */}
           <div className="login-card">
             <img
               src="https://i.imgur.com/zqpwkLQ.png"
@@ -69,14 +72,7 @@ export default function LoginPage() {
                 Log In
               </button>
 
-{/* Не правильный пароль логин */}
-              {error && (
-  <div className="login-error">
-    {error}
-  </div>
-)}
-
-              {error && <p className="server-error">{error}</p>}
+              {error && <div className="login-error">{error}</div>}
 
               <div className="or-container">
                 <div className="line"></div>
@@ -103,7 +99,6 @@ export default function LoginPage() {
             </form>
           </div>
 
-          {/* Карточка Sign Up */}
           <div className="signup-card">
             <p>
               Don’t have an account?{" "}
