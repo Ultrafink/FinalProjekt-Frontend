@@ -61,3 +61,15 @@
   font-weight: bold;
   margin-bottom: 20px;
 }
+
+/* чтобы при нажатии не было серого фона */
+.sidebar-item:active {
+  background-color: #fff;
+}
+
+/* чтобы не появлялась подсветка фокуса/тапа (особенно на мобилках) */
+.sidebar-item:focus,
+.sidebar-item:focus-visible {
+  background-color: #fff;
+  outline: none;
+}
