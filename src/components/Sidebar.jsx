@@ -1,6 +1,4 @@
-// src/components/Sidebar.jsx
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
 
 function joinUrl(base, path) {
   if (!base) return path;
@@ -9,15 +7,14 @@ function joinUrl(base, path) {
   return `${b}${p}`;
 }
 
-export default function Sidebar({ onCreate }) {
-  const { user } = useAuth();
+export default function Sidebar({ me, onCreate }) {
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const profileTo = user?.username ? `/profile/${user.username}` : "/login";
+  const profileTo = me?.username ? `/profile/${me.username}` : "/login";
 
   const avatarSrc =
-    user?.avatar
-      ? (user.avatar.startsWith("http") ? user.avatar : joinUrl(API_URL, user.avatar))
+    me?.avatar
+      ? (me.avatar.startsWith("http") ? me.avatar : joinUrl(API_URL, me.avatar))
       : "/icons/profile.png";
 
   return (
