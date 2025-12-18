@@ -3,7 +3,9 @@ import { createPost } from "../api/posts";
 
 const MAX = 2200;
 
-const EMOJIS = ["😀","😁","😂","🤣","😊","😍","😘","😎","😭","😡","👍","🔥","❤️","🎉","✨","😴","🤝","🥲","🙏"];
+const EMOJIS = [
+  "😀","😁","😂","🤣","😊","😍","😘","😎","😭","😡","👍","🔥","❤️","🎉","✨","😴","🤝","🥲","🙏"
+];
 
 export default function CreatePostModal({ open, onClose, me, onCreated }) {
   const inputRef = useRef(null);
@@ -18,20 +20,34 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
   const leftReady = !!preview;
   const canShare = leftReady && caption.length <= MAX && !loading;
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  const reset = () => {
+    setFile(null);
+    setPreview("");
+    setCaption("");
+    setShowEmojis(false);
+    setLoading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const close = () => {
+    reset();
+    onClose?.();
+  };
 
   useEffect(() => {
-    if (!file) {
-      setPreview("");
-      return;
-    }
+    if (!open) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") close();
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
     return () => URL.revokeObjectURL(url);
@@ -41,14 +57,8 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
 
   if (!open) return null;
 
-  const reset = () => {
-    setFile(null);
-    setCaption("");
-    setShowEmojis(false);
-  };
-
   const handleOverlayClick = (e) => {
-    if (e.target.classList.contains("create-overlay")) onClose();
+    if (e.target.classList.contains("create-overlay")) close();
   };
 
   const onPickFile = () => inputRef.current?.click();
@@ -61,12 +71,15 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
 
   const insertEmoji = (emoji) => {
     const el = textareaRef.current;
+
     if (!el) {
       setCaption((c) => (c + emoji).slice(0, MAX));
       return;
     }
+
     const start = el.selectionStart ?? caption.length;
     const end = el.selectionEnd ?? caption.length;
+
     const next = (caption.slice(0, start) + emoji + caption.slice(end)).slice(0, MAX);
     setCaption(next);
 
@@ -82,12 +95,10 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
       setLoading(true);
       const created = await createPost({ file, caption });
       onCreated?.(created);
-      reset();
-      onClose();
+      close();
     } catch (e) {
       console.error(e);
       alert("Не получилось создать пост :(");
-    } finally {
       setLoading(false);
     }
   };
@@ -98,13 +109,12 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
         <div className="create-header">
           <div />
           <div className="create-title">Create new post</div>
-          <button className="create-share" onClick={share} disabled={!canShare}>
+          <button className="create-share" onClick={share} disabled={!canShare} type="button">
             {loading ? "Sharing..." : "Share"}
           </button>
         </div>
 
         <div className="create-body">
-          {/* LEFT */}
           <div className="create-left">
             <input
               ref={inputRef}
@@ -119,13 +129,17 @@ export default function CreatePostModal({ open, onClose, me, onCreated }) {
                 <img src="/icons/upload.png" alt="upload" className="create-drop-icon" />
               </button>
             ) : (
-              <div className="create-preview-wrap" onClick={onPickFile} role="button" tabIndex={0}>
+              <div
+                className="create-preview-wrap"
+                onClick={onPickFile}
+                role="button"
+                tabIndex={0}
+              >
                 <img className="create-preview" src={preview} alt="preview" />
               </div>
             )}
           </div>
 
-          {/* RIGHT */}
           <div className="create-right">
             <div className="create-user">
               <div className="create-avatar">

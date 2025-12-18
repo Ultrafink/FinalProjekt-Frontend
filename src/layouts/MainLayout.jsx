@@ -14,8 +14,8 @@ export default function MainLayout() {
         const res = await axios.get("/users/me");
         setMe(res.data);
       } catch (e) {
-  console.error(e);
-}
+        console.error(e);
+      }
     };
     loadMe();
   }, []);
@@ -23,6 +23,7 @@ export default function MainLayout() {
   return (
     <div className="app-layout">
       <Sidebar onCreate={() => setCreateOpen(true)} />
+
       <main className="app-content">
         <Outlet />
       </main>

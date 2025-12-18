@@ -1,108 +1,89 @@
-:root {
-  --bg: #dde8f3;
-  --menu-bg: rgba(255, 255, 255, 0.7);
-  --border: rgba(0, 0, 0, 0.06);
-  --accent: #2563eb;
-  --text: #111827;
-  --muted: #6b7280;
-  --radius: 16px;
-  --transition: 0.3s ease;
-}
-
-.menu {
-  padding: 1rem;
-  background: var(--menu-bg);
-  backdrop-filter: blur(12px);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+/* --------------------- Sidebar --------------------- */
+.sidebar {
+  width: 80px; /* начальная ширина */
+  background-color: #ffffff;
+  height: 100vh; /* на всю высоту экрана */
+  border-right: 1px solid #ccc; /* тонкая серая линия справа */
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 60px;
-  transition: width var(--transition);
+  justify-content: space-between;
+  transition: width 0.3s ease;
 }
 
-/* базовый вид ссылки */
-.link {
+.sidebar:hover {
+  width: 200px; /* ширина при hover */
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  flex-grow: 1;
+}
+
+.sidebar-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 50px;
-  border-radius: var(--radius);
-  color: var(--muted);
+  gap: 15px;
+  padding: 12px 20px;
+  color: #000; /* текст не синий */
   text-decoration: none;
-  font-weight: 500;
-  position: relative;
-  overflow: hidden;
-  transition: background-color var(--transition), color var(--transition), box-shadow var(--transition);
+  font-weight: normal;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-item:hover {
+  background-color: #f0f0f0; /* лёгкий hover */
+}
+
+.sidebar-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.sidebar-text {
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sidebar-text {
+  opacity: 1;
+}
+
+.sidebar-spacer {
+  flex-grow: 1;
+}
+
+.sidebar-profile {
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* --- Button Create should look like link items --- */
+.sidebar-item.sidebar-create {
   background: transparent;
-
-  /* убираем серый/чёрный highlight на мобильных */
-  -webkit-tap-highlight-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
 }
 
-/* расширяем меню только при наведении мышью */
-.menu:hover {
-  width: 150px;
-}
-
-/* при hover на конкретной ссылке делаем “активный” стиль */
-.link:hover {
-  color: #fff;
-  background: var(--accent);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-/* ВАЖНО: при клике/фокусе НЕ красим и НЕ расширяем (это и было “уродство”) */
-.link:active,
-.link:focus,
-.link:focus-visible {
-  background: transparent;
-  color: var(--muted);
-  box-shadow: none;
+/* на всякий случай убираем синюю обводку/подсветку */
+.sidebar-item.sidebar-create:focus,
+.sidebar-item.sidebar-create:focus-visible {
   outline: none;
 }
 
-/* иконка */
-.link-icon {
-  font-family: "Material Symbols Rounded";
-  font-size: 26px;
-  margin-left: 16px;
-  flex-shrink: 0;
-  transition: transform var(--transition);
+.sidebar-item.sidebar-create {
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
 }
 
-/* увеличиваем иконку только при hover мышью */
-.link:hover .link-icon {
-  transform: scale(1.1);
-}
-
-/* заголовок */
-.link-title {
-  margin-left: 12px;
-  opacity: 0;
-  transform: translateX(10px);
-  transition: opacity var(--transition), transform var(--transition);
-  white-space: nowrap;
-  font-size: 15px;
-}
-
-/* показываем текст только когда меню развернуто (hover по контейнеру) */
-.menu:hover .link-title {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* профиль внизу */
-.profile-link {
-  margin-top: auto;
-}
-
-.profile-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
