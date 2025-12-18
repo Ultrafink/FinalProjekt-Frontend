@@ -1,6 +1,8 @@
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar({ onCreate }) {
+  const username = localStorage.getItem("username");
+
   return (
     <aside className="sidebar">
       <nav className="sidebar-menu">
@@ -21,7 +23,11 @@ export default function Sidebar({ onCreate }) {
         </NavLink>
 
         <NavLink to="/messages" className="sidebar-item">
-          <img src="/icons/messages.png" alt="Messages" className="sidebar-icon" />
+          <img
+            src="/icons/messages.png"
+            alt="Messages"
+            className="sidebar-icon"
+          />
           <span className="sidebar-text">Messages</span>
         </NavLink>
 
@@ -34,7 +40,7 @@ export default function Sidebar({ onCreate }) {
           <span className="sidebar-text">Notifications</span>
         </NavLink>
 
-        {/* CREATE — теперь кнопка, не NavLink */}
+        {/* CREATE — кнопка */}
         <button
           type="button"
           className="sidebar-item sidebar-create"
@@ -47,7 +53,10 @@ export default function Sidebar({ onCreate }) {
         {/* Отделяем пункт профиля внизу */}
         <div className="sidebar-spacer" />
 
-        <NavLink to="/profile" className="sidebar-item sidebar-profile">
+        <NavLink
+          to={username ? `/profile/${username}` : "/profile/edit"}
+          className="sidebar-item sidebar-profile"
+        >
           <img src="/icons/profile.png" alt="Profile" className="sidebar-icon" />
           <span className="sidebar-text">Profile</span>
         </NavLink>
