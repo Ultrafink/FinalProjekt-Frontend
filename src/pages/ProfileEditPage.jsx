@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "../utils/axios";
+import { useAuth } from "../context/useAuth";
 
 export default function ProfileEditPage() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
 
@@ -17,23 +22,20 @@ export default function ProfileEditPage() {
   const [saved, setSaved] = useState(false);
   const [hideSaved, setHideSaved] = useState(false);
 
-  // Приводим avatar к абсолютному URL, если он пришёл как "/uploads/..."
   const normalizeAvatarUrl = (value) => {
     if (!value) return "";
     if (value.startsWith("http://") || value.startsWith("https://")) return value;
 
-    // берем baseURL из твоего axios-инстанса (должен быть backend)
     const base = axios?.defaults?.baseURL || "";
-    if (!base) return value; // fallback
+    if (!base) return value;
 
     return `${base}${value.startsWith("/") ? "" : "/"}${value}`;
   };
 
-  // 🔹 Загрузка профиля
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("/users/me"); // оставляем как у тебя
+        const res = await axios.get("/users/me");
         const next = {
           username: res.data.username || "",
           website: res.data.website || "",
@@ -52,7 +54,6 @@ export default function ProfileEditPage() {
     fetchProfile();
   }, []);
 
-  // 🔹 Проверка dirty-state
   useEffect(() => {
     const isDirty =
       form.username !== initialForm.username ||
@@ -109,7 +110,6 @@ export default function ProfileEditPage() {
         ...prev,
         avatar: normalizeAvatarUrl(res.data.avatar),
       }));
-      // если бэк возвращает еще и user целиком, можно аналогично брать res.data.user.avatar
     } catch (err) {
       console.error("Avatar upload error:", err);
       const msg =
@@ -121,6 +121,11 @@ export default function ProfileEditPage() {
     } finally {
       e.target.value = "";
     }
+  };
+
+  const onLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
   if (loading) return <div className="profile-loading">Loading...</div>;
@@ -138,17 +143,11 @@ export default function ProfileEditPage() {
 
         <div className="profile-header-box">
           <div className="profile-avatar">
-            {form.avatar ? (
-              <img src={form.avatar} alt="avatar" />
-            ) : (
-              <div className="avatar-placeholder" />
-            )}
+            {form.avatar ? <img src={form.avatar} alt="avatar" /> : <div className="avatar-placeholder" />}
           </div>
 
           <div className="profile-about-preview">
-            <span className="profile-username">
-              {form.username || "username"}
-            </span>
+            <span className="profile-username">{form.username || "username"}</span>
             <p>{form.about || "Tell something about yourself"}</p>
           </div>
 
@@ -210,6 +209,16 @@ export default function ProfileEditPage() {
             disabled={!dirty}
           >
             Save
+          </button>
+
+          {/* Logout */}
+          <button
+            type="button"
+            className="logout-btn"
+            onClick={onLogout}
+            style={{ marginTop: 12 }}
+          >
+            Log out
           </button>
         </form>
       </section>

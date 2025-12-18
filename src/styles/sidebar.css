@@ -1,40 +1,70 @@
 /* --------------------- Sidebar --------------------- */
+
 .sidebar {
-  width: 80px; /* начальная ширина */
+  width: 80px;                 /* узкий режим */
+  flex: 0 0 80px;              /* не растягиваться/не сжиматься */
+  height: 100vh;
+  position: sticky;
+  top: 0;
+
   background-color: #ffffff;
-  height: 100vh; /* на всю высоту экрана */
-  border-right: 1px solid #ccc; /* тонкая серая линия справа */
+  border-right: 1px solid #ccc;
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: width 0.3s ease;
+
+  transition: width 0.25s ease;
+  overflow: hidden;            /* чтобы текст не торчал при узком режиме */
 }
 
 .sidebar:hover {
-  width: 200px; /* ширина при hover */
+  width: 200px;                /* широкий режим */
+  flex-basis: 200px;
 }
 
+/* контейнер пунктов */
 .sidebar-menu {
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
-  flex-grow: 1;
+  padding: 12px 0;
+  gap: 4px;
+  height: 100%;
 }
 
 /* базовый пункт */
 .sidebar-item {
+  height: 44px;
   display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 12px 20px;
+  align-items: center;         /* вертикально по центру */
+  gap: 12px;
 
-  /* важное: фиксируем цвет, чтобы НЕ синело (a:hover/visited/active) */
+  padding: 0 16px;
+  border-radius: 10px;
+
   color: #000;
   text-decoration: none;
 
-  font-weight: normal;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
+  font-weight: 400;
+  font-size: 15px;
+
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+/* узкий режим: иконки по центру */
+.sidebar:not(:hover) .sidebar-item {
+  justify-content: center;
+  padding: 0;                  /* убираем большие отступы, чтобы центр был реальным */
+}
+
+/* широкий режим: слева, как обычно */
+.sidebar:hover .sidebar-item {
+  justify-content: flex-start;
+  padding: 0 16px;
+}
+
+.sidebar-item:hover {
+  background-color: #f0f0f0;
 }
 
 /* чтобы ссылки точно не красились браузером/глобальными стилями */
@@ -44,55 +74,49 @@
   color: #000;
 }
 
-.sidebar-item:hover {
-  background-color: #f0f0f0; /* лёгкий hover */
-}
-
 .sidebar-icon {
   width: 24px;
   height: 24px;
-  flex-shrink: 0;
+  flex: 0 0 24px;
+  display: block;
 }
 
+/* текст скрыт в узком режиме */
 .sidebar-text {
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+/* текст показываем при hover */
 .sidebar:hover .sidebar-text {
   opacity: 1;
+  transform: translateX(0);
 }
 
+/* spacer тянет профиль вниз */
 .sidebar-spacer {
-  flex-grow: 1;
+  flex: 1;
 }
 
+/* нижний пункт (профиль) */
 .sidebar-profile {
-  font-weight: bold;
-  margin-bottom: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
 
 /* --- Button Create should look like link items --- */
 .sidebar-item.sidebar-create {
-  background: transparent;
   border: none;
   width: 100%;
   text-align: left;
   cursor: pointer;
   font-family: inherit;
-
-  /* фиксируем цвет как у ссылок */
+  background: transparent;
   color: #000;
 }
 
-/* Create тоже подсвечивается при hover */
-.sidebar-item.sidebar-create:hover {
-  background-color: #f0f0f0;
-  color: #000;
-}
-
-/* на всякий случай убираем синюю обводку/подсветку */
 .sidebar-item.sidebar-create:focus,
 .sidebar-item.sidebar-create:focus-visible {
   outline: none;

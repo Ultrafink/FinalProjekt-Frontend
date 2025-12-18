@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "../utils/axios";
-import { getToken } from "../utils/auth";
+import { clearToken, getToken } from "../utils/auth";
 import { AuthContext } from "./authContextInstance";
 
 export default function AuthProvider({ children }) {
@@ -27,13 +27,19 @@ export default function AuthProvider({ children }) {
     }
   }, []);
 
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
+    setLoadingMe(false);
+  }, []);
+
   useEffect(() => {
     refreshMe();
   }, [refreshMe]);
 
   const value = useMemo(
-    () => ({ user, setUser, refreshMe, loadingMe }),
-    [user, refreshMe, loadingMe]
+    () => ({ user, setUser, refreshMe, loadingMe, logout }),
+    [user, refreshMe, loadingMe, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

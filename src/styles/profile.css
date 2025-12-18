@@ -166,6 +166,17 @@
   }
 }
 
+.logout-btn{
+  width: 100%;
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.logout-btn:hover{
+  background:#f5f5f5;
+}
 
 
 /* 📱 MOBILE */
