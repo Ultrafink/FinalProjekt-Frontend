@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "../utils/axios";
 import CreatePostModal from "../components/CreatePostModal";
@@ -22,7 +22,7 @@ export default function MainLayout() {
   // signal for optimistic delete in pages
   const [deletedPostId, setDeletedPostId] = useState(null);
 
-  // ✅ optimistic create event (safe for multiple pages)
+  // optimistic create event
   const [createdPostEvent, setCreatedPostEvent] = useState(null);
   // shape: { nonce: number, post: object }
 
@@ -76,9 +76,28 @@ export default function MainLayout() {
     };
   }, []);
 
-  // ✅ НОРМАЛЬНОЕ вычисление прав (безопасный дефолт = false)
-  const canEditDelete =
-    !!actionsPost?.author?.id && !!me?.id && me.id === actionsPost.author.id;
+  // --- Нормализуем id'шники (Mongo: _id) ---
+  const myId = useMemo(() => me?._id || me?.id || null, [me]);
+
+  const actionsPostId = useMemo(
+    () => actionsPost?._id || actionsPost?.id || null,
+    [actionsPost]
+  );
+
+  const actionsAuthorId = useMemo(() => {
+    const a = actionsPost?.author;
+    return a?._id || a?.id || a || null;
+  }, [actionsPost]);
+
+  const canEditDelete = useMemo(() => {
+    if (!myId || !actionsAuthorId) return false;
+    return String(myId) === String(actionsAuthorId);
+  }, [myId, actionsAuthorId]);
+
+  const postUrl = useMemo(() => {
+    if (!actionsPostId) return "";
+    return `${window.location.origin}/posts/${actionsPostId}`;
+  }, [actionsPostId]);
 
   return (
     <div className="app-layout">
@@ -104,7 +123,7 @@ export default function MainLayout() {
             deletedPostId,
             setDeletedPostId,
 
-            // ✅ optimistic create
+            // optimistic create
             createdPostEvent,
             setCreatedPostEvent,
           }}
@@ -134,38 +153,32 @@ export default function MainLayout() {
         }}
       />
 
-      {/* Actions dialog (center) */}
       <PostActionsSheet
         open={actionsOpen}
         onClose={() => setActionsOpen(false)}
-        postUrl={actionsPost?.id ? `${window.location.origin}/posts/${actionsPost.id}` : ""}
+        postUrl={postUrl}
         canEdit={canEditDelete}
         canDelete={canEditDelete}
         onGoToPost={() => {
-          if (!actionsPost?.id) return;
-
-          // если нет отдельной страницы поста — замени на openPost(actionsPost.id)
-          navigate(`/posts/${actionsPost.id}`);
+          if (!actionsPostId) return;
+          navigate(`/posts/${actionsPostId}`);
         }}
         onEdit={() => {
           setActionsOpen(false);
           openEditPost(actionsPost);
         }}
         onDelete={async () => {
-          if (!actionsPost?.id) return;
+          if (!actionsPostId) return;
 
-          await axios.delete(`/posts/${actionsPost.id}`);
+          await axios.delete(`/posts/${actionsPostId}`);
 
           setActionsOpen(false);
 
-          // signal pages
-          setDeletedPostId(actionsPost.id);
-          // fallback refetch
+          setDeletedPostId(actionsPostId);
           setFeedRefreshKey((x) => x + 1);
         }}
       />
 
-      {/* Edit modal */}
       <EditPostModal
         open={editOpen}
         post={editPost}
