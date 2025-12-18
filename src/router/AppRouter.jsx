@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
@@ -10,28 +10,35 @@ import ProfilePage from "../pages/ProfilePage";
 
 import MainLayout from "../layouts/MainLayout";
 
+import ProtectedLayout from "./ProtectedLayout";
+import PublicOnlyLayout from "./PublicOnlyLayout";
+
 export default function AppRouter() {
   return (
     <Routes>
-      {/* 🔐 AUTH — БЕЗ сайдбара */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route
-        path="/accounts/password/reset"
-        element={<TroubleLoggingInPage />}
-      />
-
-      {/* 🧱 ПРИЛОЖЕНИЕ — С сайдбаром */}
-      <Route element={<MainLayout />}>
-        <Route path="/home" element={<HomePage />} />
-
-        {/* ✏️ редактирование профиля */}
-        <Route path="/profile/edit" element={<ProfileEditPage />} />
-
-        {/* 👤 профиль пользователя */}
-        <Route path="/profile/:username" element={<ProfilePage />} />
+      {/* 👤 Публичные страницы (только для гостей) */}
+      <Route element={<PublicOnlyLayout />}>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route
+          path="/accounts/password/reset"
+          element={<TroubleLoggingInPage />}
+        />
       </Route>
+
+      {/* 🔒 Приватная часть (только для залогиненных) */}
+      <Route element={<ProtectedLayout />}>
+        {/* 🧱 Layout с сайдбаром */}
+        <Route element={<MainLayout />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/profile/edit" element={<ProfileEditPage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      {/* ❓ Любой неизвестный путь */}
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

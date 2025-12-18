@@ -1,12 +1,14 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 
 export default function Sidebar({ onCreate }) {
-  const username = localStorage.getItem("username");
+  const { user } = useAuth();
+
+  const profileTo = user?.username ? `/profile/${user.username}` : "/login";
 
   return (
     <aside className="sidebar">
       <nav className="sidebar-menu">
-        {/* Основные пункты меню */}
         <NavLink to="/home" className="sidebar-item">
           <img src="/icons/home.png" alt="Home" className="sidebar-icon" />
           <span className="sidebar-text">Home</span>
@@ -40,7 +42,6 @@ export default function Sidebar({ onCreate }) {
           <span className="sidebar-text">Notifications</span>
         </NavLink>
 
-        {/* CREATE — кнопка */}
         <button
           type="button"
           className="sidebar-item sidebar-create"
@@ -50,14 +51,15 @@ export default function Sidebar({ onCreate }) {
           <span className="sidebar-text">Create</span>
         </button>
 
-        {/* Отделяем пункт профиля внизу */}
         <div className="sidebar-spacer" />
 
-        <NavLink
-          to={username ? `/profile/${username}` : "/profile/edit"}
-          className="sidebar-item sidebar-profile"
-        >
-          <img src="/icons/profile.png" alt="Profile" className="sidebar-icon" />
+        <NavLink to={profileTo} className="sidebar-item sidebar-profile">
+          <img
+            src={user?.avatar || "/icons/profile.png"}
+            alt="Profile"
+            className="sidebar-icon"
+            style={{ borderRadius: "50%", objectFit: "cover" }}
+          />
           <span className="sidebar-text">Profile</span>
         </NavLink>
       </nav>
