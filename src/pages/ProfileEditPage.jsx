@@ -22,24 +22,21 @@ export default function ProfileEditPage() {
     const fetchProfile = async () => {
       try {
         const res = await axios.get("/users/me");
-        setForm({
+        const next = {
           username: res.data.username || "",
           website: res.data.website || "",
           about: res.data.about || "",
           avatar: res.data.avatar || "",
-        });
-        setInitialForm({
-          username: res.data.username || "",
-          website: res.data.website || "",
-          about: res.data.about || "",
-          avatar: res.data.avatar || "",
-        });
+        };
+        setForm(next);
+        setInitialForm(next);
       } catch (err) {
         console.error("Profile load error:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProfile();
   }, []);
 
@@ -50,16 +47,19 @@ export default function ProfileEditPage() {
       form.website !== initialForm.website ||
       form.about !== initialForm.about ||
       form.avatar !== initialForm.avatar;
+
     setDirty(isDirty);
   }, [form, initialForm]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "about" && value.length > 100) return;
-    setForm({ ...form, [name]: value });
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    e?.preventDefault?.();
+
     try {
       await axios.patch("/users/me", {
         username: form.username,
@@ -71,17 +71,21 @@ export default function ProfileEditPage() {
       setSaved(true);
       setHideSaved(false);
 
-      // плавное исчезновение
       setTimeout(() => setHideSaved(true), 2000);
       setTimeout(() => setSaved(false), 2300);
     } catch (err) {
-      console.error(err);
-      alert("Save error");
+      console.error("Save profile error:", err);
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Save error";
+      alert(msg);
     }
   };
 
   const uploadAvatar = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const data = new FormData();
@@ -89,10 +93,18 @@ export default function ProfileEditPage() {
 
     try {
       const res = await axios.patch("/users/me/avatar", data);
-      setForm({ ...form, avatar: res.data.avatar });
+      setForm((prev) => ({ ...prev, avatar: res.data.avatar }));
     } catch (err) {
       console.error("Avatar upload error:", err);
-      alert("Save error");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Save error";
+      alert(msg);
+    } finally {
+      // чтобы повторно выбрать тот же файл
+      e.target.value = "";
     }
   };
 
@@ -121,19 +133,31 @@ export default function ProfileEditPage() {
           </div>
 
           <div className="profile-about-preview">
-            <span className="profile-username">{form.username || "username"}</span>
+            <span className="profile-username">
+              {form.username || "username"}
+            </span>
             <p>{form.about || "Tell something about yourself"}</p>
           </div>
 
-          <button className="new-photo-btn" onClick={() => fileRef.current.click()}>
+          <button
+            type="button"
+            className="new-photo-btn"
+            onClick={() => fileRef.current?.click()}
+          >
             New photo
           </button>
 
-          <input type="file" hidden ref={fileRef} onChange={uploadAvatar} />
+          <input
+            type="file"
+            hidden
+            ref={fileRef}
+            onChange={uploadAvatar}
+            accept="image/*"
+          />
         </div>
 
         {/* 🔹 форма */}
-        <div className="profile-form">
+        <form className="profile-form" onSubmit={handleSave}>
           <label>
             Username
             <input
@@ -169,13 +193,13 @@ export default function ProfileEditPage() {
           </label>
 
           <button
+            type="submit"
             className={`save-btn ${!dirty ? "disabled" : ""}`}
-            onClick={handleSave}
             disabled={!dirty}
           >
             Save
           </button>
-        </div>
+        </form>
       </section>
     </>
   );
