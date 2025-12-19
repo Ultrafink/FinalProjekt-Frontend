@@ -1,26 +1,16 @@
 import axios from "axios";
 import { getToken } from "./auth";
 
-const rawBaseURL = import.meta.env.VITE_API_URL;
-
-// убираем хвостовой слэш, чтобы не получать //posts
+const raw = import.meta.env.VITE_API_URL;
 const baseURL =
-  typeof rawBaseURL === "string" && rawBaseURL.trim()
-    ? rawBaseURL.trim().replace(/\/+$/, "")
-    : null;
+  typeof raw === "string" && raw.trim() ? raw.trim().replace(/\/+$/, "") : "";
 
 if (!baseURL) {
-  // Жёстко валим запрос, чтобы ты сразу увидел причину, а не ловил 404 на Vite
-  console.error(
-    "VITE_API_URL is not set. Add it to .env / .env.local, e.g. VITE_API_URL=http://localhost:3000"
-  );
+  console.error("VITE_API_URL is empty. Fix .env(.local) and restart dev server.");
 }
 
-const instance = axios.create({
-  baseURL: baseURL || "http://localhost:3000", // временный fallback, поменяй порт под свой backend
-});
+const instance = axios.create({ baseURL });
 
-// ---- Добавляем токен в каждый запрос ----
 instance.interceptors.request.use((config) => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
