@@ -25,7 +25,7 @@ export default function HomePage() {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("/posts");
+        const res = await axios.get("/api/posts");
         setPosts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Fetch posts error:", err);
