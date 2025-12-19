@@ -1,106 +1,138 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
+import mediaUrl from "../utils/mediaUrl";
 
-// public/icons/noposts.png
 const seenAllImg = "/icons/noposts.png";
 
 export default function HomePage() {
+  const outlet = useOutletContext?.() ?? {};
+  const feedRefreshKey = outlet?.feedRefreshKey ?? 0;
+  const openPost = outlet?.openPost;
+  const deletedPostId = outlet?.deletedPostId;
+  const createdPostNonce = outlet?.createdPostEvent?.nonce;
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // у тебя VITE_API_URL часто бывает типа: https://domain.com/api
-  const apiBase = import.meta.env.VITE_API_URL;
-
-  // база без /api — для картинок (uploads)
-  const serverBase = useMemo(() => {
-    if (!apiBase) return "";
-    return apiBase.replace(/\/api\/?$/, "");
-  }, [apiBase]);
-
-  const toAbsUrl = useMemo(() => {
-    return (url) => {
-      if (!url) return null;
-      if (url.startsWith("http://") || url.startsWith("https://")) return url;
-
-      const normalized = url.startsWith("/") ? url : `/${url}`;
-      return `${serverBase}${normalized}`;
-    };
-  }, [serverBase]);
+  const fetchFeed = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("posts/feed"); // ключевое отличие
+      setPosts(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Fetch feed error:", err);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get("posts");
-        setPosts(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error("Fetch posts error:", err);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchFeed();
+  }, [fetchFeed, feedRefreshKey]);
 
-    fetchPosts();
-  }, []);
+  useEffect(() => {
+    if (!deletedPostId && !createdPostNonce) return;
+    fetchFeed();
+  }, [fetchFeed, deletedPostId, createdPostNonce]);
 
   if (loading) return <div className="home-loading">Loading...</div>;
 
   return (
     <main className="home">
       <div className="feed">
-        {posts.map((post) => {
-          const id = post._id || post.id;
-          const username = post.user?.username || post.author?.username || "user";
-          const avatar = post.user?.avatar || post.author?.avatar;
-          const image = toAbsUrl(post.image);
-          const caption = post.caption ?? post.content ?? "";
+        {posts.length === 0 ? (
+          <div className="empty-feed">
+            <img className="empty-feed-img" src={seenAllImg} alt="No updates" />
+            <h2>You've seen all the updates</h2>
+            <p className="empty-feed-subtext">You have viewed all new publications</p>
+          </div>
+        ) : (
+          posts.map((post) => {
+            const id = post.id || post._id;
 
-          const likesCount = post.likesCount ?? post.likes?.length ?? 0;
-          const commentsCount = post.commentsCount ?? post.comments?.length ?? 0;
+            // В рабочей версии у поста автор лежит в post.author (populate)
+            const author = post.author || post.user || {};
+            const username = author?.username || "User";
 
-          return (
-            <article className="post-card" key={id}>
-              <div className="post-header">
-                {avatar ? (
-                  <img className="post-avatar" src={toAbsUrl(avatar)} alt={username} />
-                ) : (
-                  <div className="post-avatar" />
-                )}
-                <span className="username">{username}</span>
-              </div>
+            const avatarSrc = mediaUrl(author?.avatar || "/icons/profile.png");
+            const imgSrc = post.image ? mediaUrl(post.image) : null;
 
-              <div className="post-media">
-                {image ? <img className="post-image" src={image} alt="post" /> : null}
-              </div>
+            const likesCount = post.likesCount ?? post.likes?.length ?? 0;
+            const commentsCount = post.commentsCount ?? post.comments?.length ?? 0;
 
-              <div className="post-actions">
-                <button className="icon-btn" type="button" aria-label="Like">
-                  <span className="material-symbols-outlined">favorite</span>
-                </button>
-                <button className="icon-btn" type="button" aria-label="Comment">
-                  <span className="material-symbols-outlined">chat_bubble_outline</span>
-                </button>
-              </div>
+            return (
+              <article className="post-card" key={id}>
+                <div className="post-header">
+                  <img
+                    className="post-avatar"
+                    src={avatarSrc}
+                    alt="avatar"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/icons/profile.png";
+                    }}
+                  />
 
-              <div className="post-meta">
-                <div className="likes">
-                  <b>{likesCount}</b> likes
+                  <Link
+                    to={`/profile/${username}`}
+                    className="username"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {username}
+                  </Link>
+
+                  {/* если у тебя есть меню действий — сюда кнопку */}
                 </div>
 
-                {caption ? (
-                  <div className="caption">
-                    <b className="username">{username}</b> {caption}
+                <div
+                  className="post-media"
+                  onClick={() => (id ? openPost?.(id) : null)}
+                  style={{ cursor: openPost ? "pointer" : "default" }}
+                >
+                  {imgSrc ? (
+                    <img
+                      className="post-image"
+                      src={imgSrc}
+                      alt="Post"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : null}
+                </div>
+
+                <div className="post-actions">
+                  <button className="icon-btn" type="button" aria-label="Like">
+                    <span className="material-symbols-outlined">favorite</span>
+                  </button>
+                  <button className="icon-btn" type="button" aria-label="Comment">
+                    <span className="material-symbols-outlined">chat_bubble_outline</span>
+                  </button>
+                </div>
+
+                <div className="post-meta">
+                  <div className="likes">
+                    <b>{likesCount}</b> likes
                   </div>
-                ) : null}
 
-                <div className="comments">View all comments ({commentsCount})</div>
-              </div>
-            </article>
-          );
-        })}
+                  {post.caption?.trim() ? (
+                    <div className="caption">
+                      <b className="username">{username}</b> {post.caption}
+                    </div>
+                  ) : null}
 
+                  <div className="comments">View all comments ({commentsCount})</div>
+                </div>
+              </article>
+            );
+          })
+        )}
+
+        {/* блок "seen all" оставляем, но он уже не мешает empty-feed */}
         <div className="seen-all">
           <img className="seen-all-img" src={seenAllImg} alt="" />
           <div className="seen-all-title">You've seen all the updates</div>
