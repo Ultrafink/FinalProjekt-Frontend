@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 import { mediaUrl } from "../utils/mediaUrl";
-
 
 export default function HomePage() {
   const outlet = useOutletContext();
   const feedRefreshKey = outlet?.feedRefreshKey ?? 0;
   const openPost = outlet?.openPost;
   const deletedPostId = outlet?.deletedPostId;
-  const createdPostEvent = outlet?.createdPostEvent;
+  const createdPostNonce = outlet?.createdPostEvent?.nonce;
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchFeed = async () => {
+  const fetchFeed = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await axios.get("/posts/feed");
       setPosts(Array.isArray(res.data) ? res.data : []);
@@ -25,20 +25,16 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
     fetchFeed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feedRefreshKey]);
+  }, [fetchFeed, feedRefreshKey]);
 
   useEffect(() => {
-    if (!deletedPostId && !createdPostEvent) return;
-    setLoading(true);
+    if (!deletedPostId && !createdPostNonce) return;
     fetchFeed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deletedPostId, createdPostEvent]);
+  }, [fetchFeed, deletedPostId, createdPostNonce]);
 
   if (loading) return <div className="home-loading">Loading...</div>;
 
@@ -47,9 +43,15 @@ export default function HomePage() {
       <div className="feed">
         {posts.length === 0 ? (
           <div className="empty-feed">
-            <img src="/icons/noposts.png" alt="No updates" className="empty-feed-img" />
+            <img
+              src="/icons/noposts.png"
+              alt="No updates"
+              className="empty-feed-img"
+            />
             <h2>You&apos;ve seen all the updates</h2>
-            <p className="empty-feed-subtext">You have viewed all new publications</p>
+            <p className="empty-feed-subtext">
+              You have viewed all new publications
+            </p>
           </div>
         ) : (
           <>
@@ -69,7 +71,6 @@ export default function HomePage() {
                   <Link
                     to={`/profile/${post.author?.username || ""}`}
                     className="username"
-                    style={{ textDecoration: "none", color: "inherit" }}
                   >
                     {post.author?.username || "User"}
                   </Link>
@@ -82,21 +83,17 @@ export default function HomePage() {
                     className="post-image"
                     loading="lazy"
                     onClick={() => openPost?.(post._id)}
-                    style={{ cursor: "pointer" }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
                   />
                 )}
 
                 {post.caption && <p className="post-caption">{post.caption}</p>}
               </div>
             ))}
-            <div className="seen-all">
-  <img className="seen-all-img" src="/icons/noposts.png" alt="" />
 
-  <div className="seen-all-title">You've seen all the updates</div>
-</div>
+            <div className="seen-all">
+              <img className="seen-all-img" src="/icons/noposts.png" alt="" />
+              <div className="seen-all-title">You&apos;ve seen all the updates</div>
+            </div>
           </>
         )}
       </div>

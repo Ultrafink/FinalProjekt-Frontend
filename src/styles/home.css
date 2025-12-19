@@ -1,5 +1,6 @@
+/* HOME LAYOUT */
 .home {
-  margin-left: 72px;          /* место под sidebar */
+  margin-left: 72px;
   padding: 40px 0 40px;
   display: flex;
   flex-direction: column;
@@ -18,6 +19,7 @@
   font-size: 14px;
 }
 
+/* GRID */
 .feed{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -25,19 +27,23 @@
   align-items: start;
 }
 
+/* CARD */
 .post-card {
   background: #fff;
   border: 1px solid #dbdbdb;
   border-radius: 12px;
-  padding: 16px;
+  overflow: hidden;       /* важно: чтобы картинка скруглялась */
   box-sizing: border-box;
+  padding: 0;             /* убираем, иначе не будет edge-to-edge */
 }
 
+/* HEADER */
 .post-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
+  padding: 12px;
+  margin: 0;
 }
 
 .post-avatar {
@@ -48,23 +54,35 @@
   background: #eee;
 }
 
-.username{
-  color: #262626;      
+/* username: прибиваем цвет намертво (у тебя где-то глобально красит в белый) */
+.post-card .username{
+  color: #262626 !important;
   font-weight: 600;
   font-size: 14px;
 }
 
-.post-image {
+/* SQUARE MEDIA (делает все посты одинаковыми квадратами) */
+.post-media{
   width: 100%;
-  display: block;
-  border-radius: 10px;
-  border: 1px solid #efefef;
-  margin-top: 8px;
+  aspect-ratio: 1 / 1;
+  background: #f2f2f2;
 }
 
+.post-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;      /* чтобы любые фото красиво обрезались */
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
+/* CAPTION / meta */
 .post-caption {
-  margin: 10px 0 0;
-  font-size: 15px;
+  padding: 10px 12px 12px;
+  margin: 0;
+  font-size: 14px;
   line-height: 1.35;
   color: #111;
 }
@@ -91,8 +109,9 @@
   margin-bottom: 16px;
 }
 
+/* Seen all */
 .seen-all{
-  grid-column: 1 / -1;     /* растянуть на 2 колонки */
+  grid-column: 1 / -1;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -102,15 +121,18 @@
   color:#737373;
 }
 
-.seen-all-img{ width:64px; height:64px; object-fit:contain; opacity:.9; }
-
+.seen-all-img{
+  width:64px;
+  height:64px;
+  object-fit:contain;
+  opacity:.9;
+}
 
 .seen-all-title{
   font-size: 13px;
   font-weight: 600;
   color:#737373;
 }
-
 
 @media (max-width: 900px){
   .feed{ grid-template-columns: 1fr; }
