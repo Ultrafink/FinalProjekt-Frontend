@@ -104,15 +104,23 @@
   align-items: center;
 }
 
-.follow-btn{
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 10px;
-  border: 0;
-  background: #0095f6;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* чтобы текст не переносился и кнопка не плясала */
+  white-space: nowrap;
+  min-width: 110px;        /* подбери: 100–120px обычно ок */
+  padding: 6px 12px;
+  box-sizing: border-box;
+
+  /* меньше и тоньше */
+  font-size: 12px;
+  font-weight: 500;        /* или 400 если хочешь ещё тоньше */
+  line-height: 1;
+
+  border-radius: 8px;
 }
 
 .follow-btn.unfollow{
