@@ -3,7 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 import { mediaUrl } from "../utils/mediaUrl";
-import seenAllImg from "frontend/public/icons/noposts.png";
+
 
 export default function HomePage() {
   const outlet = useOutletContext();
@@ -93,7 +93,8 @@ export default function HomePage() {
               </div>
             ))}
             <div className="seen-all">
-  <img className="seen-all-img" src={seenAllImg} alt="" />
+  <img className="seen-all-img" src="/icons/noposts.png" alt="" />
+
   <div className="seen-all-title">You've seen all the updates</div>
 </div>
           </>
