@@ -27,46 +27,80 @@ export default function UserProfilePage() {
     };
   }, [apiUrl]);
 
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const [profileRes, postsRes] = await Promise.all([
+        axios.get(`/users/${username}`),
+        axios.get(`/posts/user/${username}`),
+      ]);
+
+      setUser(profileRes.data.user);
+      setStats(profileRes.data.stats);
+      setPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
+    } catch (err) {
+      console.error("Profile load error:", err);
+      setUser(null);
+      setStats(null);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const [profileRes, postsRes] = await Promise.all([
-          axios.get(`/users/${username}`),
-          axios.get(`/posts/user/${username}`),
-        ]);
-
-        setUser(profileRes.data.user);
-        setStats(profileRes.data.stats);
-        setPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
-      } catch (err) {
-        console.error("Profile load error:", err);
-        setUser(null);
-        setStats(null);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   const isFollowing = useMemo(() => {
     if (!me?._id || !user?._id) return false;
-    return Array.isArray(me.following) && me.following.some((id) => String(id) === String(user._id));
+    return (
+      Array.isArray(me.following) &&
+      me.following.some((id) => String(id) === String(user._id))
+    );
   }, [me?._id, me?.following, user?._id]);
 
   const avatarSrc = toAbsUrl(user?.avatar);
 
   const onToggleFollow = async () => {
-    if (!user?._id) return;
+    if (!user?._id || followLoading) return;
+
+    const wasFollowing = isFollowing;
+
+    // 1) Optimistic UI: сразу меняем счетчик followers
+    setStats((prev) =>
+      prev
+        ? {
+            ...prev,
+            followers: Math.max(0, (prev.followers ?? 0) + (wasFollowing ? -1 : 1)),
+          }
+        : prev
+    );
+
     setFollowLoading(true);
     try {
+      // 2) Сервер: toggle follow (и обновляем me, чтобы isFollowing пересчитался)
       const updatedMe = await toggleFollow(user._id);
       setMe?.(updatedMe);
+
+      // 3) Синхронизация: подгружаем актуальные stats с бэка (на случай рассинхрона)
+      const profileRes = await axios.get(`/users/${username}`);
+      setUser(profileRes.data.user);
+      setStats(profileRes.data.stats);
     } catch (err) {
       console.error("Follow error:", err);
+
+      // rollback optimistic
+      setStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              followers: Math.max(0, (prev.followers ?? 0) + (wasFollowing ? 1 : -1)),
+            }
+          : prev
+      );
+
       alert(err.response?.data?.message || "Follow error");
     } finally {
       setFollowLoading(false);
@@ -80,7 +114,11 @@ export default function UserProfilePage() {
     <section className="profile">
       <div className="profile-top">
         <div className="profile-avatar-lg">
-          {avatarSrc ? <img src={avatarSrc} alt={user.username} /> : <div className="avatar-placeholder" />}
+          {avatarSrc ? (
+            <img src={avatarSrc} alt={user.username} />
+          ) : (
+            <div className="avatar-placeholder" />
+          )}
         </div>
 
         <div className="profile-info">
