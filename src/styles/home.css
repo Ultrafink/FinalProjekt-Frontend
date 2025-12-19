@@ -21,10 +21,10 @@
 
 /* FEED GRID (посты меньше = ограничиваем ширину ленты) */
 .feed{
-  width: min(760px, calc(100vw - 120px));
+  width: min(640px, calc(100vw - 120px)); /* было 760px */
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;                              /* было 18px */
   align-items: start;
 }
 
