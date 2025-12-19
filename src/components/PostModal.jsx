@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import {
   addComment,
@@ -36,7 +36,6 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
     return String(myId) === String(authorId);
   }, [myId, authorId]);
 
-  // Нормализация данных, чтобы UI не исчезал из-за null/undefined
   const safeLikes = useMemo(
     () => (Array.isArray(post?.likes) ? post.likes : []),
     [post?.likes]
@@ -92,6 +91,15 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
 
   const onOverlayMouseDown = (e) => {
     if (e.target.classList.contains("post-overlay")) onClose?.();
+  };
+
+  const goProfile = (e, username) => {
+    if (!username) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setActionsOpen(false);
+    onClose?.();
+    navigate(`/profile/${username}`);
   };
 
   const handleDelete = async () => {
@@ -184,12 +192,22 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                     className="post-author-avatar"
                     src={mediaUrl(post.author?.avatar) || "/icons/profile.png"}
                     alt="avatar"
+                    onClick={(e) => goProfile(e, post.author?.username)}
+                    style={{ cursor: "pointer" }}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <div className="post-author-name">{post.author?.username || "user"}</div>
+
+                  <Link
+                    to={`/profile/${post.author?.username || ""}`}
+                    className="post-author-name"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => goProfile(e, post.author?.username)}
+                  >
+                    {post.author?.username || "user"}
+                  </Link>
                 </div>
 
                 <button
@@ -211,13 +229,25 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                       className="post-author-avatar"
                       src={mediaUrl(post.author?.avatar) || "/icons/profile.png"}
                       alt="avatar"
+                      onClick={(e) => goProfile(e, post.author?.username)}
+                      style={{ cursor: "pointer" }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/icons/profile.png";
                       }}
                     />
+
                     <div className="post-caption-text">
-                      <span className="post-bold">{post.author?.username || "user"}</span>{" "}
+                      <Link
+                        to={`/profile/${post.author?.username || ""}`}
+                        className="post-bold"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => goProfile(e, post.author?.username)}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        {post.author?.username || "user"}
+                      </Link>{" "}
                       {post.caption}
                     </div>
                   </div>
@@ -237,6 +267,9 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                             className="post-author-avatar"
                             src={mediaUrl(c.author?.avatar) || "/icons/profile.png"}
                             alt="avatar"
+                            onClick={(e) => goProfile(e, c.author?.username)}
+                            style={{ cursor: "pointer" }}
+                            onMouseDown={(e) => e.stopPropagation()}
                             onError={(e) => {
                               e.currentTarget.onerror = null;
                               e.currentTarget.src = "/icons/profile.png";
@@ -244,7 +277,15 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                           />
 
                           <div className="post-caption-text">
-                            <span className="post-bold">{c.author?.username || "user"}</span>{" "}
+                            <Link
+                              to={`/profile/${c.author?.username || ""}`}
+                              className="post-bold"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => goProfile(e, c.author?.username)}
+                              style={{ textDecoration: "none", color: "inherit" }}
+                            >
+                              {c.author?.username || "user"}
+                            </Link>{" "}
                             {c.text}
                           </div>
 
@@ -267,7 +308,6 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                     })}
                   </div>
                 ) : (
-                  // если хочешь, можешь убрать этот блок: он просто показывает, что секция живая
                   <div className="post-comments" style={{ padding: "12px 0", color: "#8e8e8e" }}>
                     No comments yet.
                   </div>

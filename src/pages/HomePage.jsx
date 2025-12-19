@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 import { mediaUrl } from "../utils/mediaUrl";
@@ -32,7 +32,6 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedRefreshKey]);
 
-  // если удалили/создали — просто перезагрузить как было
   useEffect(() => {
     if (!deletedPostId && !createdPostEvent) return;
     setLoading(true);
@@ -47,15 +46,9 @@ export default function HomePage() {
       <div className="feed">
         {posts.length === 0 ? (
           <div className="empty-feed">
-            <img
-              src="/icons/noposts.png"
-              alt="No updates"
-              className="empty-feed-img"
-            />
-            <h2>You've seen all the updates</h2>
-            <p className="empty-feed-subtext">
-              You have viewed all new publications
-            </p>
+            <img src="/icons/noposts.png" alt="No updates" className="empty-feed-img" />
+            <h2>You&apos;ve seen all the updates</h2>
+            <p className="empty-feed-subtext">You have viewed all new publications</p>
           </div>
         ) : (
           <>
@@ -71,9 +64,14 @@ export default function HomePage() {
                       e.currentTarget.src = "/icons/profile.png";
                     }}
                   />
-                  <span className="username">
+
+                  <Link
+                    to={`/profile/${post.author?.username || ""}`}
+                    className="username"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
                     {post.author?.username || "User"}
-                  </span>
+                  </Link>
                 </div>
 
                 {post.image && (
