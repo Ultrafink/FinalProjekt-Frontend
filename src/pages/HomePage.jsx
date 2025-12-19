@@ -2,24 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 
-// если картинка в public/icons/seen-all.png -> используй "/icons/seen-all.png"
-// если в src/assets -> импортируй как seenAllImg from "../assets/seen-all.png"
+// public/icons/noposts.png
 const seenAllImg = "/icons/noposts.png";
 
 export default function HomePage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  // у тебя VITE_API_URL часто бывает типа: https://domain.com/api
+  const apiBase = import.meta.env.VITE_API_URL;
+
+  // база без /api — для картинок (uploads)
+  const serverBase = useMemo(() => {
+    if (!apiBase) return "";
+    return apiBase.replace(/\/api\/?$/, "");
+  }, [apiBase]);
 
   const toAbsUrl = useMemo(() => {
     return (url) => {
       if (!url) return null;
       if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
       const normalized = url.startsWith("/") ? url : `/${url}`;
-      return `${apiUrl}${normalized}`;
+      return `${serverBase}${normalized}`;
     };
-  }, [apiUrl]);
+  }, [serverBase]);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -61,7 +68,6 @@ export default function HomePage() {
                 ) : (
                   <div className="post-avatar" />
                 )}
-
                 <span className="username">{username}</span>
               </div>
 
@@ -89,9 +95,7 @@ export default function HomePage() {
                   </div>
                 ) : null}
 
-                <div className="comments">
-                  View all comments ({commentsCount})
-                </div>
+                <div className="comments">View all comments ({commentsCount})</div>
               </div>
             </article>
           );
