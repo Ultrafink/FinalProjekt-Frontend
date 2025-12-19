@@ -1,101 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
-import { mediaUrl } from "../utils/mediaUrl";
+
+// если картинка в public/icons/seen-all.png -> используй "/icons/seen-all.png"
+// если в src/assets -> импортируй как seenAllImg from "../assets/seen-all.png"
+const seenAllImg = "/icons/noposts.png";
 
 export default function HomePage() {
-  const outlet = useOutletContext();
-  const feedRefreshKey = outlet?.feedRefreshKey ?? 0;
-  const openPost = outlet?.openPost;
-  const deletedPostId = outlet?.deletedPostId;
-  const createdPostNonce = outlet?.createdPostEvent?.nonce;
-
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchFeed = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get("/posts/feed");
-      setPosts(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Fetch feed error:", err);
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  const toAbsUrl = useMemo(() => {
+    return (url) => {
+      if (!url) return null;
+      if (url.startsWith("http://") || url.startsWith("https://")) return url;
+      const normalized = url.startsWith("/") ? url : `/${url}`;
+      return `${apiUrl}${normalized}`;
+    };
+  }, [apiUrl]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("/posts");
+        setPosts(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Fetch posts error:", err);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, []);
-
-  useEffect(() => {
-    fetchFeed();
-  }, [fetchFeed, feedRefreshKey]);
-
-  useEffect(() => {
-    if (!deletedPostId && !createdPostNonce) return;
-    fetchFeed();
-  }, [fetchFeed, deletedPostId, createdPostNonce]);
 
   if (loading) return <div className="home-loading">Loading...</div>;
 
   return (
     <main className="home">
       <div className="feed">
-        {posts.length === 0 ? (
-          <div className="empty-feed">
-            <img
-              src="/icons/noposts.png"
-              alt="No updates"
-              className="empty-feed-img"
-            />
-            <h2>You&apos;ve seen all the updates</h2>
-            <p className="empty-feed-subtext">
-              You have viewed all new publications
-            </p>
-          </div>
-        ) : (
-          <>
-            {posts.map((post) => (
-              <div className="post-card" key={post._id}>
-                <div className="post-header">
-                  <img
-                    className="post-avatar"
-                    src={mediaUrl(post.author?.avatar) || "/icons/profile.png"}
-                    alt="avatar"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/icons/profile.png";
-                    }}
-                  />
+        {posts.map((post) => {
+          const id = post._id || post.id;
+          const username = post.user?.username || post.author?.username || "user";
+          const avatar = post.user?.avatar || post.author?.avatar;
+          const image = toAbsUrl(post.image);
+          const caption = post.caption ?? post.content ?? "";
 
-                  <Link
-                    to={`/profile/${post.author?.username || ""}`}
-                    className="username"
-                  >
-                    {post.author?.username || "User"}
-                  </Link>
-                </div>
+          const likesCount = post.likesCount ?? post.likes?.length ?? 0;
+          const commentsCount = post.commentsCount ?? post.comments?.length ?? 0;
 
-                {post.image && (
-                  <img
-                    src={mediaUrl(post.image)}
-                    alt="Post"
-                    className="post-image"
-                    loading="lazy"
-                    onClick={() => openPost?.(post._id)}
-                  />
+          return (
+            <article className="post-card" key={id}>
+              <div className="post-header">
+                {avatar ? (
+                  <img className="post-avatar" src={toAbsUrl(avatar)} alt={username} />
+                ) : (
+                  <div className="post-avatar" />
                 )}
 
-                {post.caption && <p className="post-caption">{post.caption}</p>}
+                <span className="username">{username}</span>
               </div>
-            ))}
 
-            <div className="seen-all">
-              <img className="seen-all-img" src="/icons/noposts.png" alt="" />
-              <div className="seen-all-title">You&apos;ve seen all the updates</div>
-            </div>
-          </>
-        )}
+              <div className="post-media">
+                {image ? <img className="post-image" src={image} alt="post" /> : null}
+              </div>
+
+              <div className="post-actions">
+                <button className="icon-btn" type="button" aria-label="Like">
+                  <span className="material-symbols-outlined">favorite</span>
+                </button>
+                <button className="icon-btn" type="button" aria-label="Comment">
+                  <span className="material-symbols-outlined">chat_bubble_outline</span>
+                </button>
+              </div>
+
+              <div className="post-meta">
+                <div className="likes">
+                  <b>{likesCount}</b> likes
+                </div>
+
+                {caption ? (
+                  <div className="caption">
+                    <b className="username">{username}</b> {caption}
+                  </div>
+                ) : null}
+
+                <div className="comments">
+                  View all comments ({commentsCount})
+                </div>
+              </div>
+            </article>
+          );
+        })}
+
+        <div className="seen-all">
+          <img className="seen-all-img" src={seenAllImg} alt="" />
+          <div className="seen-all-title">You've seen all the updates</div>
+        </div>
       </div>
 
       <Footer />
