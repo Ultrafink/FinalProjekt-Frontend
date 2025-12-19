@@ -3,6 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
 import { mediaUrl } from "../utils/mediaUrl";
+import { toggleLike } from "../api/posts"; // как в PostModal [file:2056]
 
 const seenAllImg = "/icons/noposts.png";
 
@@ -13,8 +14,12 @@ export default function HomePage() {
   const deletedPostId = outlet?.deletedPostId;
   const createdPostNonce = outlet?.createdPostEvent?.nonce;
 
+  const me = outlet?.me;
+  const myId = me?.id || me?._id || null;
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [likingId, setLikingId] = useState(null);
 
   const fetchFeed = useCallback(async () => {
     setLoading(true);
@@ -38,6 +43,48 @@ export default function HomePage() {
     fetchFeed();
   }, [fetchFeed, deletedPostId, createdPostNonce]);
 
+  const handleOpenPost = useCallback(
+    (id) => {
+      if (!id) return;
+      openPost?.(id);
+    },
+    [openPost]
+  );
+
+  const replacePostInList = useCallback((updated) => {
+    const updatedId = updated?.id || updated?._id;
+    if (!updatedId) return;
+    setPosts((prev) =>
+      prev.map((p) => {
+        const pid = p?.id || p?._id;
+        return String(pid) === String(updatedId) ? updated : p;
+      })
+    );
+  }, []);
+
+  const handleToggleLike = useCallback(
+    async (id) => {
+      if (!id) return;
+      if (!myId) {
+        alert("Login required");
+        return;
+      }
+      if (likingId) return;
+
+      setLikingId(id);
+      try {
+        const updated = await toggleLike(id); // возвращает обновлённый пост [file:2056]
+        replacePostInList(updated);
+      } catch (e) {
+        console.error("Like error:", e);
+        alert(e?.response?.data?.message || "Like error");
+      } finally {
+        setLikingId(null);
+      }
+    },
+    [likingId, myId, replacePostInList]
+  );
+
   if (loading) return <div className="home-loading">Loading...</div>;
 
   return (
@@ -51,17 +98,21 @@ export default function HomePage() {
           </div>
         ) : (
           posts.map((post) => {
-            const id = post.id || post._id;
+            const id = post?.id || post?._id;
 
-            // в твоём working варианте: post.author (populate)
-            const author = post.author || post.user || {};
+            const author = post?.author || post?.user || {};
             const username = author?.username || "User";
 
             const avatarSrc = mediaUrl(author?.avatar || "/icons/profile.png");
-            const imgSrc = post.image ? mediaUrl(post.image) : "";
+            const imgSrc = post?.image ? mediaUrl(post.image) : "";
 
-            const likesCount = post.likesCount ?? post.likes?.length ?? 0;
-            const commentsCount = post.commentsCount ?? post.comments?.length ?? 0;
+            const likesArr = Array.isArray(post?.likes) ? post.likes : [];
+            const likedByMe =
+              !!myId && likesArr.some((x) => String(x) === String(myId));
+
+            const likesCount = post?.likesCount ?? likesArr.length ?? 0;
+            const commentsCount =
+              post?.commentsCount ?? post?.comments?.length ?? 0;
 
             return (
               <article className="post-card" key={id}>
@@ -87,7 +138,7 @@ export default function HomePage() {
 
                 <div
                   className="post-media"
-                  onClick={() => (id ? openPost?.(id) : null)}
+                  onClick={() => handleOpenPost(id)}
                   style={{ cursor: openPost ? "pointer" : "default" }}
                 >
                   {imgSrc ? (
@@ -104,10 +155,24 @@ export default function HomePage() {
                 </div>
 
                 <div className="post-actions">
-                  <button className="icon-btn" type="button" aria-label="Like">
+                  <button
+                    className={`icon-btn ${likedByMe ? "icon-btn--liked" : ""}`}
+                    type="button"
+                    aria-label="Like"
+                    onClick={() => handleToggleLike(id)}
+                    disabled={likingId === id}
+                    title={!myId ? "Login required" : "Like"}
+                  >
                     <span className="material-symbols-outlined">favorite</span>
                   </button>
-                  <button className="icon-btn" type="button" aria-label="Comment">
+
+                  <button
+                    className="icon-btn"
+                    type="button"
+                    aria-label="Comment"
+                    onClick={() => handleOpenPost(id)}
+                    title="Comments"
+                  >
                     <span className="material-symbols-outlined">chat_bubble_outline</span>
                   </button>
                 </div>
@@ -117,13 +182,19 @@ export default function HomePage() {
                     <b>{likesCount}</b> likes
                   </div>
 
-                  {post.caption?.trim() ? (
+                  {post?.caption?.trim() ? (
                     <div className="caption">
                       <b className="username">{username}</b> {post.caption}
                     </div>
                   ) : null}
 
-                  <div className="comments">View all comments ({commentsCount})</div>
+                  <button
+                    className="comments comments-btn"
+                    type="button"
+                    onClick={() => handleOpenPost(id)}
+                  >
+                    View all comments ({commentsCount})
+                  </button>
                 </div>
               </article>
             );
