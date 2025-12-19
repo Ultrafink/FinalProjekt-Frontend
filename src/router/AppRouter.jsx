@@ -40,8 +40,7 @@ export default function AppRouter() {
           <Route path="/profile/edit" element={<ProfileEditPage />} />
           <Route path="/profile/:username" element={<ProfileRoutePage />} />
           <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-<Route path="/messages/:conversationId" element={<MessagesPage />} />
+
 
         </Route>
       </Route>
