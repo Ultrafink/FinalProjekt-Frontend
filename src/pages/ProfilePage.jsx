@@ -8,7 +8,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
-  // ✅ контекст из MainLayout
   const outlet = useOutletContext() || {};
   const openPost = outlet.openPost;
 
@@ -16,14 +15,14 @@ export default function ProfilePage() {
   const setDeletedPostId = outlet.setDeletedPostId;
 
   const createdPostEvent = outlet.createdPostEvent;
-  // const setCreatedPostEvent = outlet.setCreatedPostEvent; // не обязателен
-
-  const me = outlet.me; // текущий пользователь (из /users/me), может быть null
+  const me = outlet.me;
 
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [followBusy, setFollowBusy] = useState(false);
 
   const isMe = authUser?.username === username;
 
@@ -38,38 +37,36 @@ export default function ProfilePage() {
     };
   }, [apiUrl]);
 
-  // initial load
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const [profileRes, postsRes] = await Promise.all([
+        axios.get(`/users/${username}`),
+        axios.get(`/posts/user/${username}`),
+      ]);
+
+      setUser(profileRes.data.user);
+      setStats(profileRes.data.stats);
+
+      const list = Array.isArray(postsRes.data) ? postsRes.data : [];
+      setPosts(list);
+
+      setStats((prev) => (prev ? { ...prev, posts: list.length } : prev));
+    } catch (err) {
+      console.error("Profile load error:", err);
+      setUser(null);
+      setStats(null);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const [profileRes, postsRes] = await Promise.all([
-          axios.get(`/users/${username}`),
-          axios.get(`/posts/user/${username}`),
-        ]);
-
-        setUser(profileRes.data.user);
-        setStats(profileRes.data.stats);
-
-        const list = Array.isArray(postsRes.data) ? postsRes.data : [];
-        setPosts(list);
-
-        // на всякий случай синхронизируем posts count с реальным
-        setStats((prev) => (prev ? { ...prev, posts: list.length } : prev));
-      } catch (err) {
-        console.error("Profile load error:", err);
-        setUser(null);
-        setStats(null);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
-  // ✅ optimistic delete from PostModal in MainLayout
   useEffect(() => {
     if (!deletedPostId) return;
 
@@ -78,28 +75,68 @@ export default function ProfilePage() {
       prev ? { ...prev, posts: Math.max(0, (prev.posts ?? 0) - 1) } : prev
     );
 
-    // сбрасываем, чтобы событие не применялось снова
     setDeletedPostId?.(null);
   }, [deletedPostId, setDeletedPostId]);
 
-  // ✅ optimistic create from CreatePostModal in MainLayout
   useEffect(() => {
     if (!createdPostEvent?.post) return;
 
-    // добавляем только если это МОЙ профиль (username в url == мой username)
     const myUsername = me?.username || authUser?.username;
     if (!myUsername || myUsername !== username) return;
 
     const newPost = createdPostEvent.post;
 
     setPosts((prev) => {
-      // защита от дублей
       if (prev.some((p) => String(p._id) === String(newPost._id))) return prev;
       return [newPost, ...prev];
     });
 
     setStats((prev) => (prev ? { ...prev, posts: (prev.posts ?? 0) + 1 } : prev));
   }, [createdPostEvent?.nonce, createdPostEvent?.post, username, me?.username, authUser?.username]);
+
+  const handleToggleFollow = async () => {
+    if (isMe || followBusy) return;
+
+    // 1) Оптимистично меняем UI
+    const wasFollowed = !!user?.isFollowedByMe;
+    setUser((prev) => (prev ? { ...prev, isFollowedByMe: !wasFollowed } : prev));
+    setStats((prev) =>
+      prev
+        ? {
+            ...prev,
+            followers: Math.max(0, (prev.followers ?? 0) + (wasFollowed ? -1 : 1)),
+          }
+        : prev
+    );
+
+    // 2) Делаем запрос
+    setFollowBusy(true);
+    try {
+      await axios.post(`/users/${username}/follow`);
+
+      // 3) Чтобы не было рассинхрона — подгружаем актуальные данные с сервера
+      const profileRes = await axios.get(`/users/${username}`);
+      setUser(profileRes.data.user);
+      setStats(profileRes.data.stats);
+    } catch (err) {
+      console.error("Toggle follow error:", err);
+
+      // Откат оптимистичного изменения при ошибке
+      setUser((prev) => (prev ? { ...prev, isFollowedByMe: wasFollowed } : prev));
+      setStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              followers: Math.max(0, (prev.followers ?? 0) + (wasFollowed ? 0 : -1) + (wasFollowed ? 1 : 0)),
+            }
+          : prev
+      );
+
+      alert(err?.response?.data?.message || "Не получилось подписаться");
+    } finally {
+      setFollowBusy(false);
+    }
+  };
 
   if (loading) return <div className="page-loading">Loading...</div>;
   if (!user) return <div>User not found</div>;
@@ -110,23 +147,24 @@ export default function ProfilePage() {
     <section className="profile">
       <div className="profile-top">
         <div className="profile-avatar-lg">
-          {avatarSrc ? (
-            <img src={avatarSrc} alt={user.username} />
-          ) : (
-            <div className="avatar-placeholder" />
-          )}
+          {avatarSrc ? <img src={avatarSrc} alt={user.username} /> : <div className="avatar-placeholder" />}
         </div>
 
         <div className="profile-info">
           <div className="profile-username-row">
             <h2>{user.username}</h2>
 
-            {isMe && (
+            {isMe ? (
+              <button className="edit-profile-btn" onClick={() => navigate("/profile/edit")}>
+                Edit profile
+              </button>
+            ) : (
               <button
                 className="edit-profile-btn"
-                onClick={() => navigate("/profile/edit")}
+                onClick={handleToggleFollow}
+                disabled={followBusy}
               >
-                Edit profile
+                {user.isFollowedByMe ? "Unfollow" : "Follow"}
               </button>
             )}
           </div>
