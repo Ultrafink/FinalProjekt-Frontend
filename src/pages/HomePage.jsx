@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import axios from "../utils/axios";
 import Footer from "../components/Footer";
-import mediaUrl from "../utils/mediaUrl";
+import { mediaUrl } from "../utils/mediaUrl";
 
 const seenAllImg = "/icons/noposts.png";
 
 export default function HomePage() {
-  const outlet = useOutletContext?.() ?? {};
+  const outlet = useOutletContext();
   const feedRefreshKey = outlet?.feedRefreshKey ?? 0;
   const openPost = outlet?.openPost;
   const deletedPostId = outlet?.deletedPostId;
@@ -19,7 +19,7 @@ export default function HomePage() {
   const fetchFeed = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get("posts/feed"); // ключевое отличие
+      const res = await axios.get("posts/feed");
       setPosts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch feed error:", err);
@@ -53,12 +53,12 @@ export default function HomePage() {
           posts.map((post) => {
             const id = post.id || post._id;
 
-            // В рабочей версии у поста автор лежит в post.author (populate)
+            // в твоём working варианте: post.author (populate)
             const author = post.author || post.user || {};
             const username = author?.username || "User";
 
             const avatarSrc = mediaUrl(author?.avatar || "/icons/profile.png");
-            const imgSrc = post.image ? mediaUrl(post.image) : null;
+            const imgSrc = post.image ? mediaUrl(post.image) : "";
 
             const likesCount = post.likesCount ?? post.likes?.length ?? 0;
             const commentsCount = post.commentsCount ?? post.comments?.length ?? 0;
@@ -83,8 +83,6 @@ export default function HomePage() {
                   >
                     {username}
                   </Link>
-
-                  {/* если у тебя есть меню действий — сюда кнопку */}
                 </div>
 
                 <div
@@ -94,9 +92,9 @@ export default function HomePage() {
                 >
                   {imgSrc ? (
                     <img
-                      className="post-image"
                       src={imgSrc}
                       alt="Post"
+                      className="post-image"
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -132,7 +130,6 @@ export default function HomePage() {
           })
         )}
 
-        {/* блок "seen all" оставляем, но он уже не мешает empty-feed */}
         <div className="seen-all">
           <img className="seen-all-img" src={seenAllImg} alt="" />
           <div className="seen-all-title">You've seen all the updates</div>
