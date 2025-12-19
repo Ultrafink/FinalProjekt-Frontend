@@ -22,17 +22,23 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [liking, setLiking] = useState(false);
-
   const [likingCommentId, setLikingCommentId] = useState(null);
 
   const myId = me?._id || me?.id;
   const authorId = post?.author?._id || post?.author?.id || post?.author;
   const isMine = !!(myId && authorId && String(myId) === String(authorId));
 
+  // Нормализация, чтобы UI не "пропадал", если бек вернул null/undefined
+  const safeLikes = useMemo(() => (Array.isArray(post?.likes) ? post.likes : []), [post?.likes]);
+  const safeComments = useMemo(
+    () => (Array.isArray(post?.comments) ? post.comments : []),
+    [post?.comments]
+  );
+
   const likedByMe = useMemo(() => {
-    if (!myId || !post?.likes) return false;
-    return post.likes.some((id) => String(id) === String(myId));
-  }, [post?.likes, myId]);
+    if (!myId) return false;
+    return safeLikes.some((id) => String(id) === String(myId));
+  }, [safeLikes, myId]);
 
   useEffect(() => {
     if (!open) return;
@@ -205,16 +211,15 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                   </div>
                 ) : null}
 
-                {Array.isArray(post.comments) && post.comments.length > 0 ? (
+                {safeComments.length > 0 ? (
                   <div className="post-comments">
-                    {post.comments.map((c) => {
+                    {safeComments.map((c) => {
+                      const safeCommentLikes = Array.isArray(c.likes) ? c.likes : [];
                       const likedCommentByMe =
-                        !!myId &&
-                        Array.isArray(c.likes) &&
-                        c.likes.some((id) => String(id) === String(myId));
+                        !!myId && safeCommentLikes.some((id) => String(id) === String(myId));
 
                       return (
-                        <div className="post-comment-row" key={c._id}>
+                        <div className="post-comment-row" key={c._id || `${c.author}-${c.text}`}>
                           <img
                             className="post-author-avatar"
                             src={mediaUrl(c.author?.avatar) || "/icons/profile.png"}
@@ -236,7 +241,7 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                             aria-label="Like comment"
                             title="Like"
                             onClick={() => handleToggleCommentLike(c._id)}
-                            disabled={likingCommentId === c._id}
+                            disabled={!c._id || likingCommentId === c._id}
                           >
                             {likedCommentByMe ? (
                               <FaHeart className="post-heart post-heart--active" />
@@ -271,9 +276,7 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                   </button>
                 </div>
 
-                <div className="post-likes">
-                  {Array.isArray(post.likes) ? post.likes.length : 0} likes
-                </div>
+                <div className="post-likes">{safeLikes.length} likes</div>
 
                 <div className="post-add-comment">
                   <input
@@ -299,7 +302,6 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                 </div>
               </div>
 
-              {/* FIXED: правильные пропсы под твой PostActionsSheet */}
               <PostActionsSheet
                 open={actionsOpen}
                 onClose={() => setActionsOpen(false)}
