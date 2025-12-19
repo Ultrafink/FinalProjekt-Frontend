@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import axios from "../utils/axios";
 import { toggleFollow } from "../api/users";
@@ -27,7 +27,7 @@ export default function UserProfilePage() {
     };
   }, [apiUrl]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
       const [profileRes, postsRes] = await Promise.all([
@@ -46,12 +46,11 @@ export default function UserProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
 
   useEffect(() => {
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
+  }, [fetchProfile]);
 
   const isFollowing = useMemo(() => {
     if (!me?._id || !user?._id) return false;
@@ -68,7 +67,7 @@ export default function UserProfilePage() {
 
     const wasFollowing = isFollowing;
 
-    // 1) Optimistic UI: сразу меняем счетчик followers
+    // optimistic followers count
     setStats((prev) =>
       prev
         ? {
@@ -80,11 +79,10 @@ export default function UserProfilePage() {
 
     setFollowLoading(true);
     try {
-      // 2) Сервер: toggle follow (и обновляем me, чтобы isFollowing пересчитался)
       const updatedMe = await toggleFollow(user._id);
       setMe?.(updatedMe);
 
-      // 3) Синхронизация: подгружаем актуальные stats с бэка (на случай рассинхрона)
+      // sync stats/user
       const profileRes = await axios.get(`/users/${username}`);
       setUser(profileRes.data.user);
       setStats(profileRes.data.stats);
@@ -111,7 +109,7 @@ export default function UserProfilePage() {
   if (!user) return <div>User not found</div>;
 
   return (
-    <section className="profile">
+    <section className="profile" key={username}>
       <div className="profile-top">
         <div className="profile-avatar-lg">
           {avatarSrc ? (
@@ -132,6 +130,17 @@ export default function UserProfilePage() {
                 onClick={onToggleFollow}
                 disabled={followLoading || !me?._id}
                 title={!me?._id ? "Login required" : ""}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  whiteSpace: "nowrap",
+                  minWidth: 110,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                }}
               >
                 {isFollowing ? "Unfollow" : "Follow"}
               </button>
