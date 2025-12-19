@@ -25,11 +25,23 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
   const [likingCommentId, setLikingCommentId] = useState(null);
 
   const myId = me?._id || me?.id;
-  const authorId = post?.author?._id || post?.author?.id || post?.author;
-  const isMine = !!(myId && authorId && String(myId) === String(authorId));
 
-  // Нормализация, чтобы UI не "пропадал", если бек вернул null/undefined
-  const safeLikes = useMemo(() => (Array.isArray(post?.likes) ? post.likes : []), [post?.likes]);
+  const authorId = useMemo(() => {
+    const a = post?.author;
+    return a?._id || a?.id || a || null;
+  }, [post]);
+
+  const isMine = useMemo(() => {
+    if (!myId || !authorId) return false;
+    return String(myId) === String(authorId);
+  }, [myId, authorId]);
+
+  // Нормализация данных, чтобы UI не исчезал из-за null/undefined
+  const safeLikes = useMemo(
+    () => (Array.isArray(post?.likes) ? post.likes : []),
+    [post?.likes]
+  );
+
   const safeComments = useMemo(
     () => (Array.isArray(post?.comments) ? post.comments : []),
     [post?.comments]
@@ -214,12 +226,13 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                 {safeComments.length > 0 ? (
                   <div className="post-comments">
                     {safeComments.map((c) => {
-                      const safeCommentLikes = Array.isArray(c.likes) ? c.likes : [];
+                      const cId = c?._id;
+                      const cLikes = Array.isArray(c?.likes) ? c.likes : [];
                       const likedCommentByMe =
-                        !!myId && safeCommentLikes.some((id) => String(id) === String(myId));
+                        !!myId && cLikes.some((id) => String(id) === String(myId));
 
                       return (
-                        <div className="post-comment-row" key={c._id || `${c.author}-${c.text}`}>
+                        <div className="post-comment-row" key={cId || `${c?.text}-${Math.random()}`}>
                           <img
                             className="post-author-avatar"
                             src={mediaUrl(c.author?.avatar) || "/icons/profile.png"}
@@ -240,8 +253,8 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                             className="post-icon-btn post-comment-like"
                             aria-label="Like comment"
                             title="Like"
-                            onClick={() => handleToggleCommentLike(c._id)}
-                            disabled={!c._id || likingCommentId === c._id}
+                            onClick={() => cId && handleToggleCommentLike(cId)}
+                            disabled={!cId || likingCommentId === cId}
                           >
                             {likedCommentByMe ? (
                               <FaHeart className="post-heart post-heart--active" />
@@ -253,7 +266,12 @@ export default function PostModal({ open, postId, onClose, me, onDeleted }) {
                       );
                     })}
                   </div>
-                ) : null}
+                ) : (
+                  // если хочешь, можешь убрать этот блок: он просто показывает, что секция живая
+                  <div className="post-comments" style={{ padding: "12px 0", color: "#8e8e8e" }}>
+                    No comments yet.
+                  </div>
+                )}
               </div>
 
               <div className="post-divider" />
